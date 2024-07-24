@@ -52,7 +52,7 @@
  * ⛔ Use following build flag to disable.
  * -D DISABLE_PSRAM
  */
-//#define ENABLE_PSRAM
+#define ENABLE_PSRAM
 
 /**📍 For enabling OTA updates support via RTDB, Firebase Storage and Google Cloud Storage buckets
  * ⛔ Use following build flag to disable.

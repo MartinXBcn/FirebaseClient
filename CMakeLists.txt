@@ -1,6 +1,4 @@
 
-message(INFO "<MS> CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
-
 set(Firebase_ESP_Client_SRCS 
     src/client/SSLClient/bssl/aes_big_cbcdec.c
     src/client/SSLClient/bssl/aes_big_cbcenc.c
