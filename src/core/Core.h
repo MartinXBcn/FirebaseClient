@@ -9,12 +9,18 @@
 
 #define FIREBASE_CLIENT_VERSION "1.3.5"
 
+
+#ifndef FIREBASE_CORE_IDLE_DELAY
+#define FIREBASE_CORE_IDLE_DELAY 0
+#endif
+
+
 static void sys_idle()
 {
 #if defined(ARDUINO_ESP8266_MAJOR) && defined(ARDUINO_ESP8266_MINOR) && defined(ARDUINO_ESP8266_REVISION) && ((ARDUINO_ESP8266_MAJOR == 3 && ARDUINO_ESP8266_MINOR >= 1) || ARDUINO_ESP8266_MAJOR > 3)
     esp_yield();
 #else
-    delay(0);
+    delay(FIREBASE_CORE_IDLE_DELAY);
 #endif
 }
 
