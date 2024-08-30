@@ -85,7 +85,7 @@
 #define ENABLE_LEGACY_TOKEN
 
 //#define ENABLE_ETHERNET_NETWORK
-#define ENABLE_GSM_NETWORK
+//#define ENABLE_GSM_NETWORK
 
 /** 🔖 Optional Build Options
  *

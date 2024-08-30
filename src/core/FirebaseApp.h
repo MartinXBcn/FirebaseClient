@@ -373,7 +373,9 @@ namespace firebase
                 return true;
 
             // Deinitialize
-            if (deinit && auth_data.user_auth.status._event == auth_event_uninitialized)
+            if (deinit 
+            // && auth_data.user_auth.status._event == auth_event_uninitialized
+            )
             {
                 if (auth_data.user_auth.initialized)
                 {
