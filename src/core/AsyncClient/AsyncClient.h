@@ -1,5 +1,5 @@
 /**
- * Created July 5, 2024
+ * Created October 6, 2024
  *
  * For MCU build target (CORE_ARDUINO_XXXX), see Options.h.
  *
@@ -86,7 +86,6 @@ public:
     bool auth_used = false;
     bool complete = false;
     bool async = false;
-    bool cancel = false;
     bool sse = false;
     bool path_not_existed = false;
     bool download = false;
@@ -130,7 +129,6 @@ public:
         auth_used = false;
         complete = false;
         async = false;
-        cancel = false;
         sse = false;
         path_not_existed = false;
         cb = NULL;
@@ -280,29 +278,15 @@ private:
     {
         function_return_type ret = function_return_type_continue;
 
-#if defined(ENABLE_FS)
-
         size_t totalLen = sData->request.file_data.file_size;
         bool fileopen = sData->request.payloadIndex == 0;
 
-#if defined(ENABLE_CLOUD_STORAGE)
-
-        if (sData->request.file_data.multipart.isEnabled())
-        {
-            totalLen += sData->request.file_data.multipart.getOptions().length() + sData->request.file_data.multipart.getLast().length();
-            if (sData->request.file_data.multipart.isEnabled() && sData->request.file_data.multipart.getState() == file_upload_multipart_data::multipart_state_send_options_payload)
-                return send(sData, reinterpret_cast<const uint8_t *>(sData->request.file_data.multipart.getOptions().c_str()), sData->request.file_data.multipart.getOptions().length(), totalLen, async_state_send_payload);
-            else if (sData->request.file_data.multipart.isEnabled() && sData->request.file_data.multipart.getState() == file_upload_multipart_data::multipart_state_send_last_payload)
-                return send(sData, reinterpret_cast<const uint8_t *>(sData->request.file_data.multipart.getLast().c_str()), sData->request.file_data.multipart.getLast().length(), totalLen, async_state_send_payload);
-
-            fileopen |= sData->request.file_data.multipart.isEnabled() && sData->request.payloadIndex == sData->request.file_data.multipart.getOptions().length();
-        }
-#endif
         if (sData->upload)
             sData->upload_progress_enabled = true;
 
         if (fileopen)
         {
+#if defined(ENABLE_FS)
             if (sData->request.file_data.filename.length() > 0)
             {
                 if (sData->request.file_data.file_status == file_config_data::file_status_closed)
@@ -315,7 +299,7 @@ private:
                     }
                 }
             }
-
+#endif
             if (sData->request.base64)
             {
                 ret = send(sData, reinterpret_cast<const uint8_t *>("\""), 1, totalLen, async_state_send_payload);
@@ -326,25 +310,32 @@ private:
 
         uint8_t *buf = nullptr;
         int toSend = 0;
+#if defined(ENABLE_FS)
         if (sData->request.file_data.filename.length() > 0 ? sData->request.file_data.file.available() : sData->request.file_data.data_pos < sData->request.file_data.data_size)
+#else
+        if (sData->request.file_data.data_pos < sData->request.file_data.data_size)
+#endif
         {
             if (sData->request.base64)
             {
 
                 toSend = FIREBASE_BASE64_CHUNK_SIZE;
 
+#if defined(ENABLE_FS)
                 if (sData->request.file_data.filename.length() > 0)
                 {
                     if (sData->request.file_data.file.available() < toSend)
                         toSend = sData->request.file_data.file.available();
                 }
-                else
+#endif
+                if (sData->request.file_data.data && sData->request.file_data.data_size)
                 {
                     if ((int)(sData->request.file_data.data_size - sData->request.file_data.data_pos) < toSend)
                         toSend = sData->request.file_data.data_size - sData->request.file_data.data_pos;
                 }
 
                 buf = reinterpret_cast<uint8_t *>(mem.alloc(toSend));
+#if defined(ENABLE_FS)
                 if (sData->request.file_data.filename.length() > 0)
                 {
                     toSend = sData->request.file_data.file.read(buf, toSend);
@@ -356,7 +347,8 @@ private:
                         goto exit;
                     }
                 }
-                else if (sData->request.file_data.data)
+#endif
+                if (sData->request.file_data.data && sData->request.file_data.data_size)
                 {
                     memcpy(buf, sData->request.file_data.data + sData->request.file_data.data_pos, toSend);
                     sData->request.file_data.data_pos += toSend;
@@ -372,14 +364,13 @@ private:
 #if defined(ENABLE_CLOUD_STORAGE)
                 if (sData->request.file_data.resumable.isEnabled() && sData->request.file_data.resumable.isUpload())
                     toSend = sData->request.file_data.resumable.getChunkSize(totalLen, sData->request.payloadIndex, sData->request.file_data.data_pos);
-                else if (sData->request.file_data.multipart.isEnabled() && sData->request.file_data.multipart.getState() == file_upload_multipart_data::multipart_state_send_data_payload)
-                    toSend = sData->request.file_data.multipart.getChunkSize(totalLen, sData->request.payloadIndex, sData->request.file_data.data_pos);
                 else
 #endif
                     toSend = totalLen - sData->request.file_data.data_pos < FIREBASE_CHUNK_SIZE ? totalLen - sData->request.file_data.data_pos : FIREBASE_CHUNK_SIZE;
 
                 buf = reinterpret_cast<uint8_t *>(mem.alloc(toSend));
 
+#if defined(ENABLE_FS)
                 if (sData->request.file_data.filename.length() > 0)
                 {
                     toSend = sData->request.file_data.file.read(buf, toSend);
@@ -391,7 +382,8 @@ private:
                         goto exit;
                     }
                 }
-                else if (sData->request.file_data.data)
+#endif
+                if (sData->request.file_data.data && sData->request.file_data.data_size)
                 {
                     memcpy(buf, sData->request.file_data.data + sData->request.file_data.data_pos, toSend);
                 }
@@ -408,7 +400,6 @@ private:
 
         if (buf)
             mem.release(&buf);
-#endif
 
         return ret;
     }
@@ -434,19 +425,17 @@ private:
                 sData->request.dataIndex += toSend;
                 sData->request.payloadIndex += toSend;
 
-#if defined(ENABLE_FS)
                 if (sData->upload && sData->upload_progress_enabled && sData->request.file_data.file_size)
                 {
-                    sData->aResult.upload_data.total = size;
+                    sData->aResult.upload_data.total = sData->request.file_data.file_size > size ? sData->request.file_data.file_size : size;
                     sData->aResult.upload_data.uploaded = sData->request.payloadIndex;
                     returnResult(sData, false);
                 }
-#endif
 
                 if (sData->request.dataIndex == len)
                     sData->request.dataIndex = 0;
 
-#if defined(ENABLE_FS) && defined(ENABLE_CLOUD_STORAGE)
+#if defined(ENABLE_CLOUD_STORAGE)
 
                 if (sData->request.file_data.resumable.isEnabled() && sData->request.file_data.resumable.isUpload())
                 {
@@ -461,15 +450,6 @@ private:
                         return sData->return_type;
                     }
                     else if (ret == 1)
-                    {
-                        sData->return_type = function_return_type_continue;
-                        return sData->return_type;
-                    }
-                }
-                else if (sData->request.file_data.multipart.isEnabled() && sData->request.file_data.multipart.isUpload())
-                {
-                    sData->request.file_data.multipart.updateState(sData->request.payloadIndex);
-                    if (sData->request.file_data.multipart.isUpload())
                     {
                         sData->return_type = function_return_type_continue;
                         return sData->return_type;
@@ -513,13 +493,11 @@ private:
             else if (state == async_state_send_payload)
                 sData->state = async_state_read_response;
 
-#if defined(ENABLE_FS) && defined(ENABLE_CLOUD_STORAGE)
+#if defined(ENABLE_CLOUD_STORAGE)
             if (sData->upload)
             {
                 if (sData->request.file_data.resumable.isEnabled())
                     sData->request.file_data.resumable.updateState(sData->request.payloadIndex);
-                else if (sData->request.file_data.multipart.isEnabled())
-                    sData->request.file_data.multipart.updateState(sData->request.payloadIndex);
             }
 #endif
 
@@ -619,7 +597,7 @@ private:
         if (sData->response.httpCode == 0)
             return function_return_type_continue;
 
-#if defined(ENABLE_FS) && defined(ENABLE_CLOUD_STORAGE)
+#if defined(ENABLE_CLOUD_STORAGE)
 
         if (sData->request.file_data.resumable.isEnabled() && sData->request.file_data.resumable.getLocation().length() && !sData->response.flags.header_remaining && !sData->response.flags.payload_remaining)
         {
@@ -970,7 +948,7 @@ private:
                 sData->response.flags.http_response = true;
                 clear(sData->response.val[res_hndlr_ns::etag]);
                 String temp[5];
-#if defined(ENABLE_FS) && defined(ENABLE_CLOUD_STORAGE)
+#if defined(ENABLE_CLOUD_STORAGE)
                 if (sData->upload)
                     parseRespHeader(sData, sData->response.val[res_hndlr_ns::header], sData->request.file_data.resumable.getLocationRef(), "Location");
 #else
@@ -1003,7 +981,7 @@ private:
 
                 clear(sData);
 
-#if defined(ENABLE_FS) && defined(ENABLE_CLOUD_STORAGE)
+#if defined(ENABLE_CLOUD_STORAGE)
                 if (sData->upload && sData->request.file_data.resumable.isEnabled())
                 {
                     sData->request.file_data.resumable.setHeaderState();
@@ -1875,18 +1853,20 @@ private:
 
     void setFileContentLength(async_data_item_t *sData, int headerLen = 0, const String &customHeader = "")
     {
-#if defined(ENABLE_FS)
-        if ((sData->request.file_data.cb && sData->request.file_data.filename.length()) || (sData->request.file_data.data_size && sData->request.file_data.data))
-        {
-            size_t sz = 0;
-            if (sData->request.file_data.cb)
-            {
-                sData->request.file_data.cb(sData->request.file_data.file, sData->request.file_data.filename.c_str(), file_mode_open_read);
-                sz = sData->request.file_data.file.size();
-            }
-            else
-                sz = sData->request.file_data.data_size;
+        size_t sz = 0;
 
+#if defined(ENABLE_FS)
+        if (sData->request.file_data.cb && sData->request.file_data.filename.length())
+        {
+            sData->request.file_data.cb(sData->request.file_data.file, sData->request.file_data.filename.c_str(), file_mode_open_read);
+            sz = sData->request.file_data.file.size();
+        }
+#endif
+        if (sData->request.file_data.data_size && sData->request.file_data.data)
+            sz = sData->request.file_data.data_size;
+
+        if (sz > 0)
+        {
             sData->request.file_data.file_size = sData->request.base64 ? 2 + b64ut.getBase64Len(sz) : sz;
             if (customHeader.length())
             {
@@ -1900,7 +1880,6 @@ private:
 
             closeFile(sData);
         }
-#endif
     }
 
     uint8_t slotCount() const { return sVec.size(); }
@@ -1935,7 +1914,7 @@ private:
 
     bool handleSendTimeout(async_data_item_t *sData)
     {
-        if (sData->request.send_timer.remaining() == 0 || sData->cancel)
+        if (sData->request.send_timer.remaining() == 0)
         {
             // In case TCP write error.
             setAsyncError(sData, sData->state, FIREBASE_ERROR_TCP_SEND, !sData->sse, false);
@@ -1949,7 +1928,7 @@ private:
 
     bool handleReadTimeout(async_data_item_t *sData)
     {
-        if (!sData->sse && (sData->response.read_timer.remaining() == 0 || sData->cancel))
+        if (!sData->sse && sData->response.read_timer.remaining() == 0)
         {
             // In case TCP read error.
             setAsyncError(sData, sData->state, FIREBASE_ERROR_TCP_RECEIVE_TIMEOUT, !sData->sse, false);
@@ -1973,7 +1952,7 @@ private:
 
     String getHost(async_data_item_t *sData, bool fromReq, String *ext = nullptr)
     {
-#if defined(ENABLE_FS) && defined(ENABLE_CLOUD_STORAGE)
+#if defined(ENABLE_CLOUD_STORAGE)
         String url = fromReq ? sData->request.val[req_hndlr_ns::url] : sData->request.file_data.resumable.getLocation();
 #else
         String url = fromReq ? sData->request.val[req_hndlr_ns::url] : sData->response.val[res_hndlr_ns::location];
@@ -1995,16 +1974,21 @@ private:
             {
                 sys_idle();
                 async_data_item_t *sData = getData(i);
-                if (sData && sData->async && !sData->auth_used && !sData->cancel)
+                if (sData && sData->async && !sData->auth_used && !sData->to_remove)
                 {
+                    // Reset the app data to reset clear the available status when the task was canceled.
+                    sData->aResult.reset(sData->aResult.app_data);
+                    if (getResult(sData))
+                        getResult(sData)->reset(getResult(sData)->app_data);
+
                     if (uid.length())
                     {
                         if (strcmp(sData->aResult.uid().c_str(), uid.c_str()) == 0)
-                            sData->cancel = true;
+                            sData->to_remove = true;
                     }
                     else
                     {
-                        sData->cancel = true;
+                        sData->to_remove = true;
                         if (!all)
                             break;
                     }
@@ -2081,7 +2065,7 @@ private:
         if (!options.auth_used)
         {
             sData->request.app_token = options.app_token;
-            if (options.app_token && !options.auth_param && (options.app_token->auth_type == auth_id_token || options.app_token->auth_type == auth_user_id_token || options.app_token->auth_type == auth_access_token || options.app_token->auth_type == auth_sa_access_token))
+            if (options.app_token && !options.auth_param && (options.app_token->auth_type > auth_unknown_token && options.app_token->auth_type < auth_refresh_token))
             {
                 sData->request.addAuthHeaderFirst(options.app_token->auth_type);
                 sData->request.val[req_hndlr_ns::header] += FIREBASE_AUTH_PLACEHOLDER;

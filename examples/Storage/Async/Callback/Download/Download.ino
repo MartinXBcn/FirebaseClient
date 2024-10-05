@@ -16,19 +16,20 @@
  * Storage::download(<AsyncClient>, <FirebaseStorage::Parent>, <file_config_data>, <AsyncResultCallback>, <uid>);
  *
  * <AsyncClient> - The async client.
- * <FirebaseStorage::Parent> - The FirebaseStorage::Parent object included Storage bucket Id and object in its constructor.
+ * <FirebaseStorage::Parent> - The FirebaseStorage::Parent object included Storage bucket Id, object and/or access token in its constructor.
  * <file_config_data> - The filesystem data (file_config_data) obtained from FileConfig class object.
  * <AsyncResultCallback> - The async result callback (AsyncResultCallback).
  * <uid> - The user specified UID of async result (optional).
  *
  * The bucketid is the Storage bucket Id of object to download.
  * The object is the object in Storage bucket to download.
+ * The access token is the Firebase Storage's file access token which used only for priviledge file download access in non-authentication mode (NoAuth).
  *
  * The complete usage guidelines, please visit https://github.com/mobizt/FirebaseClient
  */
 
 #include <Arduino.h>
-#if defined(ESP32) || defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_GIGA)
+#if defined(ESP32) || defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_GIGA) || defined(ARDUINO_OPTA)
 #include <WiFi.h>
 #elif defined(ESP8266)
 #include <ESP8266WiFi.h>
@@ -44,20 +45,19 @@
 #include <WiFi.h>
 #endif
 
-#include <FirebaseClient.h>
+// In ESP32 Core SDK v3.x.x, to use filesystem in this library,
+// the File object should be defined globally
+// and the library's internal defined FS object should be set with
+// this global FS object in fileCallback function.
+#include <FS.h>
+File myFile;
 
-#if defined(ENABLE_FS)      // Defined in this library
-#if defined(FLASH_SUPPORTS) // Defined in this library
 #if defined(ESP32)
 #include <SPIFFS.h>
 #endif
 #define MY_FS SPIFFS
-#else
-#include <SPI.h>
-#include <SD.h>
-#define MY_FS SD
-#endif
-#endif
+
+#include <FirebaseClient.h>
 
 #define WIFI_SSID "WIFI_AP"
 #define WIFI_PASSWORD "WIFI_PASSWORD"
@@ -93,7 +93,7 @@ FirebaseApp app;
 #if defined(ESP32) || defined(ESP8266) || defined(ARDUINO_RASPBERRY_PI_PICO_W)
 #include <WiFiClientSecure.h>
 WiFiClientSecure ssl_client;
-#elif defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_UNOWIFIR4) || defined(ARDUINO_GIGA) || defined(ARDUINO_PORTENTA_C33) || defined(ARDUINO_NANO_RP2040_CONNECT)
+#elif defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_UNOWIFIR4) || defined(ARDUINO_GIGA) || defined(ARDUINO_OPTA) || defined(ARDUINO_PORTENTA_C33) || defined(ARDUINO_NANO_RP2040_CONNECT)
 #include <WiFiSSLClient.h>
 WiFiSSLClient ssl_client;
 #endif
@@ -162,6 +162,9 @@ void loop()
 
 #if defined(ENABLE_FS)
         storage.download(aClient, FirebaseStorage::Parent(STORAGE_BUCKET_ID, "media.mp4"), getFile(media_file), asyncCB, "downloadTask");
+        // You can provide the access token in case non-authentication mode (NoAuth) for priviledge access file download.
+        // storage.download(aClient, FirebaseStorage::Parent(STORAGE_BUCKET_ID, "media.mp4", "access token"), getFile(media_file), asyncCB, "downloadTask");
+
 #endif
     }
 }
@@ -220,13 +223,13 @@ void fileCallback(File &file, const char *filename, file_operating_mode mode)
     switch (mode)
     {
     case file_mode_open_read:
-        file = MY_FS.open(filename, FILE_OPEN_MODE_READ);
+        myFile = MY_FS.open(filename, FILE_OPEN_MODE_READ);
         break;
     case file_mode_open_write:
-        file = MY_FS.open(filename, FILE_OPEN_MODE_WRITE);
+        myFile = MY_FS.open(filename, FILE_OPEN_MODE_WRITE);
         break;
     case file_mode_open_append:
-        file = MY_FS.open(filename, FILE_OPEN_MODE_APPEND);
+        myFile = MY_FS.open(filename, FILE_OPEN_MODE_APPEND);
         break;
     case file_mode_remove:
         MY_FS.remove(filename);
@@ -234,5 +237,7 @@ void fileCallback(File &file, const char *filename, file_operating_mode mode)
     default:
         break;
     }
+    // Set the internal FS object with global File object.
+    file = myFile;
 }
 #endif

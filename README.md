@@ -2,11 +2,11 @@
 
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/mobizt/FirebaseClient/.github%2Fworkflows%2Fcompile_library.yml?logo=github&label=compile) [![Github Stars](https://img.shields.io/github/stars/mobizt/FirebaseClient?logo=github)](https://github.com/mobizt/FirebaseClient/stargazers) ![Github Issues](https://img.shields.io/github/issues/mobizt/FirebaseClient?logo=github)
 
-![GitHub Release](https://img.shields.io/github/v/release/mobizt/FirebaseClient) ![Arduino](https://img.shields.io/badge/Arduino-v1.3.5-57C207?logo=arduino) ![PlatformIO](https://badges.registry.platformio.org/packages/mobizt/library/FirebaseClient.svg) ![GitHub Release Date](https://img.shields.io/github/release-date/mobizt/FirebaseClient)
+![GitHub Release](https://img.shields.io/github/v/release/mobizt/FirebaseClient) ![Arduino](https://img.shields.io/badge/Arduino-v1.4.0-57C207?logo=arduino) ![PlatformIO](https://badges.registry.platformio.org/packages/mobizt/library/FirebaseClient.svg) ![GitHub Release Date](https://img.shields.io/github/release-date/mobizt/FirebaseClient)
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/mobizt?logo=github)](https://github.com/sponsors/mobizt)
 
-Revision `2024-07-17T02:11:29Z`
+Revision `2024-10-05T05:27:46Z`
 
 ## Table of Contents
 
@@ -112,11 +112,14 @@ This [`FirebaseClient`](https://github.com/mobizt/FirebaseClient) library was ct
 > [!IMPORTANT]  
 > For ESP8266 device usage, you should read the [Memory Options for ESP8266](#memory-options-for-esp8266) section for heap selection.
 
+> [!NOTE]  
+> The Cloud Firestore Database data change listening does not support by REST API.
+
 ## Frequently Asked Questions
 
 For the FAQ (Frequently Asked Questions), please visit [here](/FAQ.md).
 
-## Supported Devices.
+## Supported Devices
 
  * ESP8266 MCUs based boards
  * ESP32 MCUs based boards
@@ -128,6 +131,7 @@ For the FAQ (Frequently Asked Questions), please visit [here](/FAQ.md).
  * Arduino® Portenta C33
  * Arduino® Nano RP2040
  * Arduino® GIGA R1 WiFi
+ * Arduino® OPTA
  * Raspberry Pi Pico (RP2040)
  * STM32 MCU based boards (minimum 256k Flash memory)
  * Teensy 3.1, 3.2, 3.5, 3.6, 4.0 and 4.1
@@ -138,6 +142,11 @@ For the FAQ (Frequently Asked Questions), please visit [here](/FAQ.md).
  * W5100 SPI Ethernet module
  * W5500 SPI Ethernet module
  * SIMCom Modules with [TinyGSM](https://github.com/vshymanskyy/TinyGSM)
+
+
+ # Unsuppored Devices
+
+ * All Atmega (AVR) devices
 
 
  ## Dependencies
@@ -186,7 +195,7 @@ In addition, some features are changed which included the following.
 
 There is no `JSON` library included in this `FirebaseClient` library. If you still prefer to use `FirebaseJson` functions as in the old library, you have to include it manually in your code.
 
-The `FirebaseJson` library can be installed via the Arduino's Library Manager and PlatformIO's Library Manager or can be download and install from the [FirebaseJson Repository](https://github.com/mobizt/FirebaseJson).
+The `FirebaseJson` library can be installed via the Arduino's Library Manager and PlatformIO's Library Manager or can be downloaded and install from the [FirebaseJson Repository](https://github.com/mobizt/FirebaseJson).
 
 For `JSON` payload, this library will use [`object_t`](/resources/docs/placeholders.md#object_t) as a `JSON` placeholder for the functions represents the `JSON` object but it does not have serialization/deserialization functionalities. See [`The Value Placeholders`](#the-value-placeholders) for more information.
 
@@ -336,6 +345,8 @@ board_build.filesystem_size = 1m
 
 See this Arduino-Pico SDK [documentation](https://arduino-pico.readthedocs.io/en/latest/) for more information.
 
+> [!NOTE]  
+> You cannot install Arduino IDE and Arduino library in Microsoft's `OneDrive` folder because the `OneDrive` folder is the sandbox or virtual folder instead of real folder which causes the path error when compilation.
 
 ## Usages
 
@@ -490,7 +501,7 @@ The async task handler will kepp the async tasks running as long as it places in
 > The async task handler i.e. `FirebaseApp::loop()`, `RealtimeDatabase::loop()`, `Storage::loop()`, `Messaging::loop()`, `CloudStorage::loop()` and `CloudFunctions` should be placed inside the main `loop` function, at the top most of the `loop`.
 
 > [!NOTE] 
-> Even the authentication task can run asynchronously, you can run it asynchronously by waiting until the `FirebaseApp::ready()` function returns true.
+> Even the authentication task can run asynchronously, you can run it synchronously by waiting until the `FirebaseApp::ready()` function returns true.
 
 > [!NOTE] 
 > Since v1.2.1, you can [set the filter](https://github.com/mobizt/FirebaseClient/blob/main/resources/docs/realtime_database.md#-void-setssefiltersconst-string-filter--) to filter the `Stream events` in `SSE mode (HTTP Streaming)` task.
@@ -715,7 +726,7 @@ You can get the `UID` from `AsyncResult` via `AsyncResult::uid()`.
 > The async client used in authentication task should be defined globally as it runs asynchronously.
 
 > [!CAUTION]
-> Please don't run your code inside the async callback function because it use stack memory.
+> Please don't run your code inside the async callback function because it uses stack memory.
 
 - ### App Events
 
@@ -851,9 +862,9 @@ String stringVal = databaseResult.to<String>();
 
 The error information (`FirebaseError`) from the async result can be obtained from `FirebaseError AsyncResult::error()` are included the following.
 
-  - `int AsyncResult::error().code()` returns the numeric error of two major sources: `TCP Client Error` and `Server Response Error`. The `TCP Client Error` was defined [here](/src/core/Error.h#L32-L64) and the `Server Response Error` was defined [here](/src/core/Error.h#L72-L88).
+  - `int AsyncResult::error().code()` returns the numeric error of two major sources: `TCP Client Error` and `Server Response Error`. The `TCP Client Error` was defined [here](/src/core/Error.h#L32-L64) and the `Server Response Error` was defined [here](/src/core/Error.h#L72-L89).
 
-  - `String AsyncResult::error().message()` returns the error string based on the `AsyncResult::error().code()` which in case `Server Response Error`, the `unauthorized`, `precondition failed (ETag does not match)` and `HTTP Status xxx` can be returned. In case `TCP Client Error`, the [predefined messages](/src/core/Error.h#L139-L195) can be returned.
+  - `String AsyncResult::error().message()` returns the error string based on the `AsyncResult::error().code()` which in case `Server Response Error`, the `unauthorized`, `precondition failed (ETag does not match)` and `HTTP Status xxx` can be returned. In case `TCP Client Error`, the [predefined messages](/src/core/Error.h#L138-L203) can be returned.
 
 
 - ### Debug Information
@@ -985,7 +996,7 @@ This type of authentication is used when privilege (admin rights) access is need
 
 The service account credentials and json file can be used for authentication. 
 
-This authentication types can be used in `all Firebase services apps`. Then in case various Firebase services application, to reduce the code complexity, you can define single global `FirebaseApp` and `ServiceAuth` for all your Firebase services used in your code.
+This authentication type can be used in `all Firebase services apps`. Then in case various Firebase services application, to reduce the code complexity, you can define single global `FirebaseApp` and `ServiceAuth` for all your Firebase services used in your code.
 
 The single global `FirebaseApp` with `ServiceAuth` may not meet your requirement when you want to sign in as a user. In this case you should define the `FirebaseApp`s specific for different authentication types.
 
@@ -1188,7 +1199,7 @@ IDToken::save(<file_config_data>)
 
 The database secret was used for authorization. You can save the credentials to file and load it with the constructor.
 
-The [LegacyToken](/examples/App/AppInitialization/Async/Callback/TokenAuth/LegacyToken/) class parameters aer included the following.
+The [LegacyToken](/examples/App/AppInitialization/Async/Callback/TokenAuth/LegacyToken/) class parameters are included the following.
 
 ```cpp
 LegacyToken::LegacyToken(<database_secret>)
@@ -1260,21 +1271,25 @@ In case of file errors, you have to verify your hardware and your code to make s
 
 ```cpp
 
+#include <FS.h>
+File myFile; // Define the File object globally.
+
 #define MY_FS SPIFFS
 
 void fileCallback(File &file, const char *filename, file_operating_mode mode)
 {
     // FILE_OPEN_MODE_READ, FILE_OPEN_MODE_WRITE and FILE_OPEN_MODE_APPEND are defined in this library
+    // MY_FS is defined in this example
     switch (mode)
     {
     case file_mode_open_read:
-        file = MY_FS.open(filename, FILE_OPEN_MODE_READ);
+        myFile = MY_FS.open(filename, FILE_OPEN_MODE_READ);
         break;
     case file_mode_open_write:
-        file = MY_FS.open(filename, FILE_OPEN_MODE_WRITE);
+        myFile = MY_FS.open(filename, FILE_OPEN_MODE_WRITE);
         break;
     case file_mode_open_append:
-        file = MY_FS.open(filename, FILE_OPEN_MODE_APPEND);
+        myFile = MY_FS.open(filename, FILE_OPEN_MODE_APPEND);
         break;
     case file_mode_remove:
         MY_FS.remove(filename);
@@ -1282,6 +1297,8 @@ void fileCallback(File &file, const char *filename, file_operating_mode mode)
     default:
         break;
     }
+    // Set the internal FS object with global File object.
+    file = myFile;
 }
 
 FileConfig media_file("/media.mp4", fileCallback);
@@ -1346,7 +1363,7 @@ Library also provides the option to resume the network connection in case of net
 
 In case WiFi, if the Core SDK provides reconnection function, library will reconnect to WiFi using that function otherwise the WiFi AP credentials are required.
 
-In case Ethernet, if external Ethernet client was used, library will provided the configuarations to allow Ethernet module enabling/resetting and initialization.
+In case Ethernet, if external Ethernet client was used, library will provide the configuarations to allow Ethernet module enabling/resetting and initialization.
 
 In case GSM, it requires the configurations for initialize the TinyGSM modem.
 
@@ -1621,7 +1638,7 @@ The `App` folder contains 3 sub folders:
 
 - `UserManagement` folder is for Google authentication examples to manage user.
 
-The following section will provided the basic (bare minimum) code example and the links: for the examples, class and functions description and Google API documentation.
+The following section will provide the basic (bare minimum) code example and the links: for the examples, class and functions description and Google API documentation.
 
 <details>
 <summary>For the Library Examples Structure, please click here.</summary>
@@ -1990,7 +2007,7 @@ The following section will provided the basic (bare minimum) code example and th
 
 ```cpp
 #include <Arduino.h>
-#if defined(ESP32) || defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_GIGA)
+#if defined(ESP32) || defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_GIGA) || defined(ARDUINO_OPTA)
 #include <WiFi.h>
 #elif defined(ESP8266)
 #include <ESP8266WiFi.h>
@@ -2026,7 +2043,7 @@ FirebaseApp app;
 #if defined(ESP32) || defined(ESP8266) || defined(ARDUINO_RASPBERRY_PI_PICO_W)
 #include <WiFiClientSecure.h>
 WiFiClientSecure ssl_client;
-#elif defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_UNOWIFIR4) || defined(ARDUINO_GIGA) || defined(ARDUINO_PORTENTA_C33) || defined(ARDUINO_NANO_RP2040_CONNECT)
+#elif defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_UNOWIFIR4) || defined(ARDUINO_GIGA) || defined(ARDUINO_OPTA) || defined(ARDUINO_PORTENTA_C33) || defined(ARDUINO_NANO_RP2040_CONNECT)
 #include <WiFiSSLClient.h>
 WiFiSSLClient ssl_client;
 #endif
@@ -2135,7 +2152,7 @@ void asyncCB(AsyncResult &aResult)
 
 ```cpp
 #include <Arduino.h>
-#if defined(ESP32) || defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_GIGA)
+#if defined(ESP32) || defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_GIGA) || defined(ARDUINO_OPTA)
 #include <WiFi.h>
 #elif defined(ESP8266)
 #include <ESP8266WiFi.h>
@@ -2171,7 +2188,7 @@ FirebaseApp app;
 #if defined(ESP32) || defined(ESP8266) || defined(ARDUINO_RASPBERRY_PI_PICO_W)
 #include <WiFiClientSecure.h>
 WiFiClientSecure ssl_client;
-#elif defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_UNOWIFIR4) || defined(ARDUINO_GIGA) || defined(ARDUINO_PORTENTA_C33) || defined(ARDUINO_NANO_RP2040_CONNECT)
+#elif defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_UNOWIFIR4) || defined(ARDUINO_GIGA) || defined(ARDUINO_OPTA) || defined(ARDUINO_PORTENTA_C33) || defined(ARDUINO_NANO_RP2040_CONNECT)
 #include <WiFiSSLClient.h>
 WiFiSSLClient ssl_client;
 #endif
@@ -2282,7 +2299,7 @@ void printResult(AsyncResult &aResult)
 
 ```cpp
 #include <Arduino.h>
-#if defined(ESP32) || defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_GIGA)
+#if defined(ESP32) || defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_GIGA) || defined(ARDUINO_OPTA)
 #include <WiFi.h>
 #elif defined(ESP8266)
 #include <ESP8266WiFi.h>
@@ -2326,7 +2343,7 @@ FirebaseApp app;
 #if defined(ESP32) || defined(ESP8266) || defined(ARDUINO_RASPBERRY_PI_PICO_W)
 #include <WiFiClientSecure.h>
 WiFiClientSecure ssl_client;
-#elif defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_UNOWIFIR4) || defined(ARDUINO_GIGA) || defined(ARDUINO_PORTENTA_C33) || defined(ARDUINO_NANO_RP2040_CONNECT)
+#elif defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_UNOWIFIR4) || defined(ARDUINO_GIGA) || defined(ARDUINO_OPTA) || defined(ARDUINO_PORTENTA_C33) || defined(ARDUINO_NANO_RP2040_CONNECT)
 #include <WiFiSSLClient.h>
 WiFiSSLClient ssl_client;
 #endif
@@ -2561,12 +2578,12 @@ For using `PSRAM`, see [Memory Options](#memory-options) section.
 
 The OTA firmware update is supported using bin file stored in `Firebase Storage` and `Google Cloud Storage` buckets or base64 encoded data stored in `Realtime Database`.
 
-The Arduino devices that is natively supports OTA firmware update is `ESP8266`, `ESP32` and `Raspberry Pi Pico`.
+The Arduino devices that natively supported OTA firmware update are `ESP8266`, `ESP32` and `Raspberry Pi Pico`.
 
-Since v1.3.1, the Arduino SAMD21 boards that use NINA firmware and WiFi101 firmware are also supported using [Internal_Storage_OTA](https://github.com/mobizt/Internal_Storage_OTA) library.
+Since FirebaseClient v1.3.1, the OTA update in Arduino SAMD21 boards that use NINA firmware and WiFi101 firmware was supported using [Internal_Storage_OTA](https://github.com/mobizt/Internal_Storage_OTA) library.
 
 
-The [Internal_Storage_OTA](https://github.com/mobizt/Internal_Storage_OTA) is the modified version of [WiFi101OTA](http://www.arduino.cc/en/Reference/WiFi101OT) library which contains only foure files e.g. `Internal_Storage_OTA.h`, `InternalStorage.h`, `InternalStorage.cpp`and `OTAStorage.h`.
+The [Internal_Storage_OTA](https://github.com/mobizt/Internal_Storage_OTA) is the modified version of [WiFi101OTA](http://www.arduino.cc/en/Reference/WiFi101OT) library which contains only four required files e.g. `Internal_Storage_OTA.h`, `InternalStorage.h`, `InternalStorage.cpp`and `OTAStorage.h`.
 
 
 To allow OTA update in SAMD21 Arduino boards, you have to include `Internal_Storage_OTA.h` in your sketch.
@@ -2576,7 +2593,7 @@ Then assign the `InternalStorage` class object to be used for `Realtume Database
 
 In SAMD21 Arduino boards, if `OTA Storage` was not set before calling OTA function, the error `OTA Storage was not set` will be occurred.
 
-Finally, once the OTA update complete, in case [Internal_Storage_OTA](https://github.com/mobizt/Internal_Storage_OTA), you have to call `InternalStorage.apply()` to apply the update and then restart.
+Finally, once the OTA update was finished, in case [Internal_Storage_OTA](https://github.com/mobizt/Internal_Storage_OTA), you have to call `InternalStorage.apply()` to apply the update and then restart.
 
 Some OTA libraries that provide `Storage Class` object that derived from the modified version of Arduino WiFi101OTA's `OTAStorage` class can also be used.
 
