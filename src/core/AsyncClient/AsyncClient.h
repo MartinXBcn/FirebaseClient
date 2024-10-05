@@ -396,7 +396,7 @@ private:
         else if (sData->request.base64)
             ret = send(sData, reinterpret_cast<const uint8_t *>("\""), 1, totalLen, async_state_send_payload);
 
-    exit:
+//    exit:
 
         if (buf)
             mem.release(&buf);
