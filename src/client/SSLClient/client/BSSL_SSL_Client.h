@@ -102,8 +102,14 @@ public:
     void setDebugLevel(int level);
 
     int connect(IPAddress ip, uint16_t port) override;
+    // <MS>
+    int connect(IPAddress ip, uint16_t port, int32_t timeout) override;
 
     int connect(const char *host, uint16_t port) override;
+    // <MS>
+    int connect(const char *host, uint16_t port, int32_t timeout) override;
+
+
 
     uint8_t connected() override;
 

@@ -138,6 +138,11 @@ int BSSL_SSL_Client::connect(IPAddress ip, uint16_t port)
     return 1;
 }
 
+int BSSL_SSL_Client::connect(IPAddress ip, uint16_t port, int32_t timeout) {
+    _timeout = timeout;
+    return connect(ip, port);
+}
+
 int BSSL_SSL_Client::connect(const char *host, uint16_t port)
 {
     if (_isSSLEnabled && mIsSecurePort(port))
@@ -150,6 +155,11 @@ int BSSL_SSL_Client::connect(const char *host, uint16_t port)
     _session_ts = millis();
 
     return 1;
+}
+
+int BSSL_SSL_Client::connect(const char *host, uint16_t port, int32_t timeout) {
+    _timeout = timeout;
+    return connect(host, port);
 }
 
 uint8_t BSSL_SSL_Client::connected()

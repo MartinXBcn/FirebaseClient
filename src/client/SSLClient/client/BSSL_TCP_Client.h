@@ -59,6 +59,14 @@
 
 #include <string>
 
+
+// <MS>
+// Because of new c++-compiler with ESP-IDF 5.3.1, the following line is necessary.
+// Disable the overloaded-virtual error
+//#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+
+
 class BSSL_TCP_Client : public Client
 {
 
@@ -446,6 +454,12 @@ private:
 
     char *mStreamLoad(Stream &stream, size_t size);
 };
+
+
+// <MS>
+// Re-enable the overloaded-virtual error
+//#pragma GCC diagnostic pop
+
 
 #endif
 
