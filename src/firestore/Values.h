@@ -1,5 +1,5 @@
 /**
- * Created June 26, 2024
+ * Created October 29, 2024
  *
  * The MIT License (MIT)
  * Copyright (c) 2024 K. Suwatchai (Mobizt)
@@ -70,7 +70,6 @@ const struct firebase_firestore_const_key_t firestore_const_key[firestore_const_
  */
 namespace Values
 {
-
     class NullValue : public Printable
     {
     private:
@@ -154,14 +153,15 @@ namespace Values
     private:
         String buf, str;
         ObjectWriter owriter;
+        StringUtil sut;
         const char *getVal() { return owriter.setPair(str, firestore_const_key[firestore_const_key_integerValue].text, buf); }
 
     public:
         /**
-         * A integer value.
-         *  @param value The integer value.
+         * A 64-bit signed integer value.
+         *  @param value The 64-bit signed integer value.
          */
-        explicit IntegerValue(int value) : buf(StringValue(String(value)).c_str()) { getVal(); }
+        explicit IntegerValue(int64_t value) : buf(StringValue(sut.num2Str(value)).c_str()) { getVal(); }
         const char *c_str() const { return buf.c_str(); }
         const char *val() { return getVal(); }
         size_t printTo(Print &p) const override { return p.print(str.c_str()); }

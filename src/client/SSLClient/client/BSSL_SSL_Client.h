@@ -1,7 +1,7 @@
 /**
- * BSSL_SSL_Client library v1.0.14 for Arduino devices.
+ * BSSL_SSL_Client library v1.0.18 for Arduino devices.
  *
- * Created June 27, 2024
+ * Created December 5, 2024
  *
  * This work contains codes based on WiFiClientSecure from Earle F. Philhower and SSLClient from OSU OPEnS Lab.
  *
@@ -40,10 +40,21 @@
 #include "../ESP_SSLClient_FS.h"
 #include "../ESP_SSLClient_Const.h"
 
-#if defined(USE_EMBED_SSL_ENGINE)
+#if defined(USE_EMBED_SSL_ENGINE) && !defined(ARDUINO_ARCH_RP2040) && !defined(ARDUINO_NANO_RP2040_CONNECT)
 #define EMBED_SSL_ENGINE_BASE_OVERRIDE override
 #else
 #define EMBED_SSL_ENGINE_BASE_OVERRIDE
+#endif
+
+#if defined(ESP_ARDUINO_VERSION) /* ESP32 core >= v2.0.x */
+#if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 1, 0)
+#define ESP32_ARDUINO_CORE_CLIENT_CONNECT_OVERRIDE override;
+#define ESP32_ARDUINO_CORE_CLIENT_CONNECT_HAS_TMO
+#else
+#define ESP32_ARDUINO_CORE_CLIENT_CONNECT_OVERRIDE
+#endif
+#else
+#define ESP32_ARDUINO_CORE_CLIENT_CONNECT_OVERRIDE
 #endif
 
 #define BSSL_SSL_CLIENT_MIN_SESSION_TIMEOUT_SEC 60
@@ -102,14 +113,15 @@ public:
     void setDebugLevel(int level);
 
     int connect(IPAddress ip, uint16_t port) override;
-    // <MS>
-    int connect(IPAddress ip, uint16_t port, int32_t timeout) override;
 
     int connect(const char *host, uint16_t port) override;
-    // <MS>
+
+
+
+#if defined(ESP32_ARDUINO_CORE_CLIENT_CONNECT_HAS_TMO)
+    int connect(IPAddress ip, uint16_t port, int32_t timeout) override;
     int connect(const char *host, uint16_t port, int32_t timeout) override;
-
-
+#endif
 
     uint8_t connected() override;
 

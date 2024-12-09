@@ -28,6 +28,7 @@
 #include <Arduino.h>
 #include <Client.h>
 #include "./Config.h"
+#include <type_traits>
 
 #if defined(ARDUINO_UNOWIFIR4) || defined(ARDUINO_MINIMA) || defined(ARDUINO_PORTENTA_C33)
 #define FIREBASE_STRSEP strsepImpl
@@ -98,9 +99,10 @@ public:
 
     void addSp(String &buf) { buf += ' '; }
 
-    String u64Str(uint64_t val)
+    // Some cores do not provide 64-bit integer to string conversion.
+    template <typename T = uint64_t>
+    auto num2Str(T val, bool negative = false) -> typename std::enable_if<(std::is_same<T, uint64_t>::value), String>::type
     {
-        // Some cores do not provide 64-bit integer to string conversion.
         String v;
         char buffer[21];
         char *ndx = &buffer[sizeof(buffer) - 1];
@@ -110,8 +112,24 @@ public:
             *--ndx = val % 10 + '0';
             val = val / 10;
         } while (val != 0);
-        v = ndx;
+
+        if (negative)
+            v += '-';
+        v += ndx;
         return v;
+    }
+
+    template <typename T = int64_t>
+    auto num2Str(T val) -> typename std::enable_if<(std::is_same<T, int64_t>::value), String>::type
+    {
+        uint64_t value = val < 0 ? -val : val;
+        return num2Str(value, val < 0);
+    }
+
+    template <typename T = int>
+    auto num2Str(T val) -> typename std::enable_if<(!std::is_same<T, uint64_t>::value && !std::is_same<T, int64_t>::value), String>::type
+    {
+        return String(val);
     }
 };
 

@@ -1,7 +1,7 @@
 /**
- * BSSL_SSL_Client library v1.0.14 for Arduino devices.
+ * BSSL_SSL_Client library v1.0.18 for Arduino devices.
  *
- * Created June 27, 2024
+ * Created December 5, 2024
  *
  * This work contains codes based on WiFiClientSecure from Earle F. Philhower and SSLClient from OSU OPEnS Lab.
  *
@@ -30,7 +30,6 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 #ifndef BSSL_SSL_CLIENT_CPP
 #define BSSL_SSL_CLIENT_CPP
 
@@ -137,7 +136,7 @@ int BSSL_SSL_Client::connect(IPAddress ip, uint16_t port)
 
     return 1;
 }
-
+/*
 int BSSL_SSL_Client::connect(IPAddress ip, uint16_t port, int32_t timeout) {
     _timeout = timeout;
     return connect(ip, port);
@@ -156,11 +155,22 @@ int BSSL_SSL_Client::connect(const char *host, uint16_t port)
 
     return 1;
 }
+*/
+#if defined(ESP32_ARDUINO_CORE_CLIENT_CONNECT_HAS_TMO)
+int BSSL_SSL_Client::connect(IPAddress ip, uint16_t port, int32_t timeout)
+{
+    if (timeout > 0)
+        setTimeout(timeout);
+    return connect(ip, port);
+}
 
-int BSSL_SSL_Client::connect(const char *host, uint16_t port, int32_t timeout) {
-    _timeout = timeout;
+int BSSL_SSL_Client::connect(const char *host, uint16_t port, int32_t timeout)
+{
+    if (timeout > 0)
+        setTimeout(timeout);
     return connect(host, port);
 }
+#endif
 
 uint8_t BSSL_SSL_Client::connected()
 {
@@ -1480,7 +1490,7 @@ int BSSL_SSL_Client::mConnectSSL(const char *host)
 #else
 #define CRTSTORECOND
 #endif
-    if (!_use_insecure && !_use_fingerprint && !_use_self_signed && !_knownkey CRTSTORECOND && !_ta)
+    if (!_use_insecure && !_use_fingerprint && !_use_self_signed && !_knownkey CRTSTORECOND && !_ta && !_esp32_ta)
     {
         esp_ssl_debug_print(PSTR("Connection *will* fail, no authentication method is setup."), _debug_level, esp_ssl_debug_warn, __func__);
     }
