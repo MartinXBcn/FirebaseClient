@@ -8,6 +8,9 @@
  * <apn> - The GPRS APN (Access Point Name).
  * <user> - The GPRS user.
  * <password> - The GPRS password.
+ * 
+ * In ESP32 Core v3.x.x, PPP devices are natively supported.
+ * See examples/App/NetworkInterfaces/Async/NoCallback/DefaultNetworks/DefaultPPPNetwork/ESP32
  *
  * The complete usage guidelines, please visit https://github.com/mobizt/FirebaseClient
  *
@@ -78,7 +81,7 @@ TinyGsm modem(SerialAT);
 
 TinyGsmClient gsm_client(modem);
 
-// This is a library internal SSL client.
+// This is a library's internal SSL client.
 // You can use any SSL Client that works with GSM library.
 // The ESP_SSLClient uses PSRAM by default (if it is available), for PSRAM usage, see https://github.com/mobizt/FirebaseClient#memory-options
 // For ESP_SSLClient documentation, see https://github.com/mobizt/ESP_SSLClient
