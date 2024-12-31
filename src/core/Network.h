@@ -256,7 +256,8 @@ typedef void (*NetworkStatusCallback)(bool &);
     defined(TINY_GSM_MODEM_MC60E) ||      \
     defined(TINY_GSM_MODEM_XBEE) ||       \
     defined(TINY_GSM_MODEM_SEQUANS_MONARCH)
-//#define FIREBASE_TINYGSM_IS_AVAILABLE
+// <MS>
+// #define FIREBASE_TINYGSM_IS_AVAILABLE
 #endif
 
 #if defined(FIREBASE_TINYGSM_IS_AVAILABLE) && __has_include(<TinyGsmClient.h>)
@@ -271,7 +272,8 @@ typedef void (*NetworkStatusCallback)(bool &);
 #include <PPP.h>
 #endif
 
-#define FIREBASE_NATIVE_PPP_IS_AVAILABLE
+// <MS>
+// #define FIREBASE_NATIVE_PPP_IS_AVAILABLE
 //  ESP32 Core Enum
 //  PPP_MODEM_GENERIC
 //  PPP_MODEM_SIM7600
