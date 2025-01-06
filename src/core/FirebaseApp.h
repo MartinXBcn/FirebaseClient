@@ -1,5 +1,5 @@
 /**
- * Created October 30, 2024
+ * Created December 27, 2024
  *
  * The MIT License (MIT)
  * Copyright (c) 2024 K. Suwatchai (Mobizt)
@@ -72,6 +72,7 @@ namespace firebase
         bool ul_dl_task_running = false;
         uint32_t expire = FIREBASE_DEFAULT_TOKEN_TTL;
         JSONUtil json;
+        StringUtil sut;
         String extras, subdomain, host;
         slot_options_t sop;
         String uid;
@@ -102,42 +103,23 @@ namespace firebase
             return false;
         }
 
-        template <typename T = int>
-        bool parseItem(StringUtil &sut, const String &src, T &dest, const String &name, const String &delim, int &p1, int &p2)
-        {
-            sut.parse(src, name, delim, p1, p2);
-            if (p1 > -1 && p2 > -1)
-            {
-                if (src[p1] == '"')
-                    p1++;
-                if (src[p2] == '"')
-                    p2--;
-                dest = atoi(src.substring(p1, p2).c_str());
-                p1 = p2;
-                return true;
-            }
-            p1 = 0;
-            p2 = 0;
-            return false;
-        }
-
         bool parseToken(const String &payload)
         {
             StringUtil sut;
             int p1 = 0, p2 = 0;
             auth_data.app_token.clear();
-            String token, refresh;
+            String token, refresh, str;
 
             if (payload.indexOf("\"error\"") > -1)
             {
-                String str;
                 if (parseItem(sut, payload, str, "\"error\"", auth_data.user_auth.auth_type == auth_user_id_token || auth_data.user_auth.auth_type == auth_sa_custom_token ? "}" : ",", p1, p2))
                 {
                     int code = 0;
-                    str = "";
                     p1 = 0;
                     p2 = 0;
-                    parseItem(sut, payload, code, "\"code\"", ",", p1, p2);
+                    if (parseItem(sut, payload, str, "\"code\"", ",", p1, p2))
+                        code = atoi(str.c_str());
+                    str = "";
                     parseItem(sut, payload, str, "\"message\"", ",", p1, p2);
                     parseItem(sut, payload, str, "\"error_description\"", "}", p1, p2);
                     if (str[str.length() - 1] == '"')
@@ -156,12 +138,14 @@ namespace firebase
                     sut.trim(token);
                     parseItem(sut, payload, refresh, "\"refreshToken\"", ",", p1, p2);
                     sut.trim(refresh);
-                    parseItem(sut, payload, auth_data.app_token.expire, "\"expiresIn\"", "}", p1, p2);
+                    if (parseItem(sut, payload, str, "\"expiresIn\"", "}", p1, p2))
+                        auth_data.app_token.expire = atoi(str.c_str());
                 }
             }
             else if (payload.indexOf("\"id_token\"") > -1)
             {
-                parseItem(sut, payload, auth_data.app_token.expire, "\"expires_in\"", ",", p1, p2);
+                if (parseItem(sut, payload, str, "\"expires_in\"", ",", p1, p2))
+                    auth_data.app_token.expire = atoi(str.c_str());
                 parseItem(sut, payload, refresh, "\"refresh_token\"", ",", p1, p2);
                 parseItem(sut, payload, token, "\"id_token\"", ",", p1, p2);
                 parseItem(sut, payload, auth_data.app_token.val[app_tk_ns::uid], "\"user_id\"", ",", p1, p2);
@@ -173,7 +157,8 @@ namespace firebase
             {
                 if (parseItem(sut, payload, token, "\"access_token\"", ",", p1, p2))
                 {
-                    parseItem(sut, payload, auth_data.app_token.expire, "\"expires_in\"", ",", p1, p2);
+                    if (parseItem(sut, payload, str, "\"expires_in\"", ",", p1, p2))
+                        auth_data.app_token.expire = atoi(str.c_str());
                     parseItem(sut, payload, auth_data.app_token.val[app_tk_ns::type], "\"token_type\"", "}", p1, p2);
                 }
             }
@@ -538,9 +523,8 @@ namespace firebase
 
                     if (getClient())
                         newRequest(aClient, sop, subdomain, extras, resultCb, uid);
-
-                    extras.remove(0, extras.length());
-                    host.remove(0, host.length());
+                    sut.clear(extras);
+                    sut.clear(host);
                     setEvent(auth_event_auth_request_sent);
                 }
             }
@@ -612,8 +596,8 @@ namespace firebase
                     if (getClient())
                         newRequest(aClient, sop, subdomain, extras, resultCb, uid);
 
-                    extras.remove(0, extras.length());
-                    host.remove(0, host.length());
+                    sut.clear(extras);
+                    sut.clear(host);
                     setEvent(auth_event_auth_request_sent);
                     return true;
                 }
@@ -657,7 +641,7 @@ namespace firebase
 
                     if (parseToken(sData->response.val[res_hndlr_ns::payload].c_str()))
                     {
-                        sData->response.val[res_hndlr_ns::payload].remove(0, sData->response.val[res_hndlr_ns::payload].length());
+                        sut.clear(sData->response.val[res_hndlr_ns::payload]);
                         auth_timer.feed(expire && expire < auth_data.app_token.expire ? expire : auth_data.app_token.expire - 2 * 60);
                         auth_data.app_token.authenticated = true;
                         auth_data.app_token.auth_ts = millis();

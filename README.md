@@ -2,11 +2,11 @@
 
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/mobizt/FirebaseClient/.github%2Fworkflows%2Fcompile_library.yml?logo=github&label=compile) [![Github Stars](https://img.shields.io/github/stars/mobizt/FirebaseClient?logo=github)](https://github.com/mobizt/FirebaseClient/stargazers) ![Github Issues](https://img.shields.io/github/issues/mobizt/FirebaseClient?logo=github)
 
-![GitHub Release](https://img.shields.io/github/v/release/mobizt/FirebaseClient) ![Arduino](https://img.shields.io/badge/Arduino-v1.4.11-57C207?logo=arduino) ![PlatformIO](https://badges.registry.platformio.org/packages/mobizt/library/FirebaseClient.svg) ![GitHub Release Date](https://img.shields.io/github/release-date/mobizt/FirebaseClient)
+![GitHub Release](https://img.shields.io/github/v/release/mobizt/FirebaseClient) ![Arduino](https://img.shields.io/badge/Arduino-v1.4.14-57C207?logo=arduino) ![PlatformIO](https://badges.registry.platformio.org/packages/mobizt/library/FirebaseClient.svg) ![GitHub Release Date](https://img.shields.io/github/release-date/mobizt/FirebaseClient)
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/mobizt?logo=github)](https://github.com/sponsors/mobizt)
 
-Revision `2024-12-21T04:55:10Z`
+Revision `2025-01-06T13:42:50Z`
 
 ## Table of Contents
 
@@ -391,7 +391,22 @@ The following authentication/authorization classes generate and hold the `ID tok
 
 - The `CustomAuth` class is for `ID token authorization using service account`. The `Service Account` will be used for user authentication and it also provides the `ID token` that uses in the authorization requests. This allows the client to acess the services on behalf of user with custom `UID`.
 
-- The `CustomToken` class is for `ID token authorization using custom token`, which the custom claims signed `JWT` token obtained from the user authentication process in other applications will be used in the authorization requests.
+The `CustomAuth` class and `ServiceAuth` class which will discus later required the crypto library to sign the JWT token.
+
+The `BearSSL` engine library that includes in `ESP_SSLClient` library that comes with this FirebaseClient library will be used to handle this cryptographic tasks.
+
+This `BearSSL` and `ESP_SSLClient`libraries are enabled or included by default with `ENABLE_SERVICE_AUTH` or `ENABLE_CUSTOM_AUTH` macros defined in [src/Config.h](src/Config.h) which requires more program space.
+
+If you want to authenticate with Custom Token using custom claims signed `JWT` token via `CustomToken` class below or never use the `ServiceAuth` and `CustomAuth` classes and `ESP_SSLClient` library, you can disable `BearSSL` inclusion by defining the macros/build flags `DISABLE_CUSTOM_AUTH` and `DISABLE_SERVICE_AUTH` in  [src/Config.h](src/Config.h) or `src/UserConfig.h`, see [Library Build Options](#library-build-options) section.
+
+
+- The `CustomToken` class is for `ID token authorization using custom token`, which the custom claims signed `JWT` token obtained from the user authentication process in other applications e.g. NodeJS server side app that runs Firebase Admin SDK and working with the Service Account JSON file
+, will be used in the authorization requests.
+
+For crating Custom token using Service Account JSON file and Firebase Admin SDK in server side app, visit [Create Custom Tokens](https://firebase.google.com/docs/auth/admin/create-custom-tokens) documentation from Firebase for more information.
+
+For creating Custom token using [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/provide-credentials-adc), see [this Blog](https://hiranya911.medium.com/firebase-create-custom-tokens-without-service-account-credentials-d6049c2d2d85) for how to.
+ 
 
 The following authentication/authorization classes generate and hold the `access token` and `secret key` for Firebase/Google APIs privilege access.
 
@@ -1368,6 +1383,8 @@ In case Ethernet, if external Ethernet client was used, library will provide the
 
 In case GSM, it requires the configurations for initialize the TinyGSM modem.
 
+In ESP32 Core v3.x.x, SIM devices are natively supported, the SIM or GSM module connected with ESP32 device can work without TinyGSMClient library.
+
 In case generic client, it required the callback function to handle the network connection/reconnection.
 
 > [!NOTE] 
@@ -1378,7 +1395,7 @@ The `AsyncClientClass` object requires the network config data (`network_config_
 
 - [DefaultNetwork](/examples/App/NetworkInterfaces/Async/Callback/DefaultNetworks/DefaultNetwork/) is used with the core WiFi enabled networking.
 
-- [DefaultPPPNetwork](/examples/App/NetworkInterfaces/Async/Callback/DefaultNetworks/DefaultPPPNetwork/) is used with the ESP32 core v3.x.x with PPP networking supports.
+- [DefaultPPPNetwork](/examples/App/NetworkInterfaces/Async/Callback/DefaultNetworks/DefaultPPPNetwork/) is used with the ESP32 core v3.x.x with PPP networking supports which allows us to use SIM or GSM module with ESP32 device without TinyGSMClient library.
 
 - [DefaultWiFiNetwork](/examples/App/NetworkInterfaces/Async/Callback/DefaultNetworks/DefaultWiFiNetwork/) is used with the core WiFi Multi enabled networking or non-core WiFi networking.
 
@@ -1386,7 +1403,7 @@ The `AsyncClientClass` object requires the network config data (`network_config_
 
 - [EthernetNetwork](/examples/App/NetworkInterfaces/Async/Callback/EthernetNetwork/) is used with the non-core Ethernet networking.
 
-- [GSMNetwork](/examples/App/NetworkInterfaces/Async/Callback/GSMNetwork/) is used with the non-core GSM networking.
+- [GSMNetwork](/examples/App/NetworkInterfaces/Async/Callback/GSMNetwork/) is used with the non-core GSM networking. In case ESP32, please use [DefaultPPPNetwork](/examples/App/NetworkInterfaces/Async/Callback/DefaultNetworks/DefaultPPPNetwork/) instead.
 
 - [GenericNetwork](/examples/App/NetworkInterfaces/Async/Callback/GenericNetwork/) is used with the non-core or user defined networking.
 
@@ -1577,6 +1594,8 @@ See [EthernetNetwork example](/examples/App/NetworkInterfaces/Async/Callback/Eth
 - `GSMNetwork`
 
 The `GSMNetwork` class can be used only with [TinyGSM](https://github.com/vshymanskyy/TinyGSM) library.
+
+In case ESP32 Core v3.x.x, SIM/GSM devices are natively supported which allows us to use SIM or GSM module with ESP32 device without TinyGSMClient library, see `DefaultPPPNetwork` class which mentioned earlier.
 
 As [TinyGSM](https://github.com/vshymanskyy/TinyGSM) library requirement, one of GSM module macro should be defined in the sketch. 
 
@@ -1966,6 +1985,7 @@ The following section will provide the basic (bare minimum) code example and the
             * [Stream](/examples/RealtimeDatabase/Async/Callback/Stream/)
             * [StreamConcurentcy](/examples/RealtimeDatabase/Async/Callback/StreamConcurentcy/)
             * [StreamGSM](/examples/RealtimeDatabase/Async/Callback/StreamGSM/)
+            * [StreamPPP](/examples/RealtimeDatabase/Async/Callback/StreamPPP/)
             * [Update](/examples/RealtimeDatabase/Async/Callback/Update/)
         * [NoCallback](/examples/RealtimeDatabase/Async/NoCallback/)
             * [BLOB](/examples/RealtimeDatabase/Async/NoCallback//BLOB/)
@@ -1979,6 +1999,7 @@ The following section will provide the basic (bare minimum) code example and the
             * [Stream](/examples/RealtimeDatabase/Async/NoCallback/Stream/)
             * [StreamConcurentcy](/examples/RealtimeDatabase/Async/NoCallback/StreamConcurentcy/)
             * [StreamGSM](/examples/RealtimeDatabase/Async/NoCallback/StreamGSM/)
+            * [StreamPPP](/examples/RealtimeDatabase/Async/NoCallback/StreamPPP/)
             * [Update](/examples/RealtimeDatabase/Async/NoCallback/Update/)
     * [Simple](/examples/RealtimeDatabase/Simple/)
         * [SimpleDatabaseSecret](/examples/RealtimeDatabase/Simple/SimpleDatabaseSecret/)
@@ -3179,6 +3200,8 @@ This `UserConfig.h` will not change or overwrite when update the library.
 
 The library code size is varied from 80k - 110k (WiFi and WiFiClientSecure excluded) depends on the build options.
 
+The code size is 170k lesser than old Firebase library when perform the same operations.
+
 ## Frequently Asked Questions
 
 For the FAQ (Frequently Asked Questions), please visit [here](/FAQ.md).
@@ -3212,7 +3235,7 @@ If you like my works, you can give a star. If you can make benefit from my proje
 
 The MIT License (MIT)
 
-Copyright (c) 2024 K. Suwatchai (Mobizt)
+Copyright (c) 2025 K. Suwatchai (Mobizt)
 
 
 Permission is hereby granted, free of charge, to any person returning a copy of

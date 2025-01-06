@@ -1,5 +1,5 @@
 /**
- * Created March 21, 2024
+ * Created December 27, 2024
  *
  * The MIT License (MIT)
  * Copyright (c) 2024 K. Suwatchai (Mobizt)
@@ -68,7 +68,7 @@ public:
         if (p1 > -1)
         {
             p2 = str.indexOf(':', p1);
-            if (p1 > -1 && str.substring(p1, p2) == name)
+            if (p2 > -1 && str.substring(p1, p2) == name)
             {
                 p1 = p2 + 1;
                 while (str[p1] == ' ')
@@ -130,6 +130,11 @@ public:
     auto num2Str(T val) -> typename std::enable_if<(!std::is_same<T, uint64_t>::value && !std::is_same<T, int64_t>::value), String>::type
     {
         return String(val);
+    }
+
+    void clear(String &s)
+    {
+       s.remove(0, s.length());
     }
 };
 
