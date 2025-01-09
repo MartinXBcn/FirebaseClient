@@ -2,11 +2,11 @@
 
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/mobizt/FirebaseClient/.github%2Fworkflows%2Fcompile_library.yml?logo=github&label=compile) [![Github Stars](https://img.shields.io/github/stars/mobizt/FirebaseClient?logo=github)](https://github.com/mobizt/FirebaseClient/stargazers) ![Github Issues](https://img.shields.io/github/issues/mobizt/FirebaseClient?logo=github)
 
-![GitHub Release](https://img.shields.io/github/v/release/mobizt/FirebaseClient) ![Arduino](https://img.shields.io/badge/Arduino-v1.4.14-57C207?logo=arduino) ![PlatformIO](https://badges.registry.platformio.org/packages/mobizt/library/FirebaseClient.svg) ![GitHub Release Date](https://img.shields.io/github/release-date/mobizt/FirebaseClient)
+![GitHub Release](https://img.shields.io/github/v/release/mobizt/FirebaseClient) ![Arduino](https://img.shields.io/badge/Arduino-v1.4.17-57C207?logo=arduino) ![PlatformIO](https://badges.registry.platformio.org/packages/mobizt/library/FirebaseClient.svg) ![GitHub Release Date](https://img.shields.io/github/release-date/mobizt/FirebaseClient)
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/mobizt?logo=github)](https://github.com/sponsors/mobizt)
 
-Revision `2025-01-06T13:42:50Z`
+Revision `2025-01-09T02:03:14Z`
 
 ## Table of Contents
 
@@ -105,6 +105,7 @@ This [`FirebaseClient`](https://github.com/mobizt/FirebaseClient) library was cr
 - The internal SSL Client and WiFiClient issue causes the session need to be closed at some interval.
 - The `Realtime Database` stream event data can be missing due to the sync read operation.
 - The async operation is not truely impremented.
+- The library's code size is quite large. This new library code size is 170k smaller which requires only 80k - 110k program space.
 
 > [!IMPORTANT]  
 > If you are new to `Firebase Products`, please read the [Project Preparation and Setup](#project-preparation-and-setup) section first.
@@ -1043,7 +1044,7 @@ ServiceAuth::ServiceAuth(<TimeStatusCallback>, <file_config_data>, <expire>)
 
 The auth token need to be re-created instead of refreshing.
 
-The `CustomAuth` and `ServiceAuth` classes required the JWT token processor which is done via the function `JWTClass::loop(<auth_data_t*>)` which accepts the pointer to the `auth_data_t` from the `FirebaseApp::getAuth()`. 
+The `CustomAuth` and `ServiceAuth` classes required the JWT token processor which is done via the function `firebase::JWTClass::loop(<auth_data_t*>)` which accepts the pointer to the `auth_data_t` from the `FirebaseApp::getAuth()`. 
 
 The examples in this library, the static object of `JWTClass` called `JWT` will be used to save the stack memory usage and it is not thread safe when using in multi-threaded operations (`multi-FirebaseApp`) because of sharing internal `jwt_token_data_t`.
 
