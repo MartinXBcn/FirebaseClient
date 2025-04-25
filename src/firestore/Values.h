@@ -1,5 +1,5 @@
 /**
- * Created December 27, 2024
+ * 2025-02-08
  *
  * The MIT License (MIT)
  * Copyright (c) 2025 K. Suwatchai (Mobizt)
@@ -26,11 +26,10 @@
 #define FIRESTORE_VALUES_H
 
 #include <Arduino.h>
-#include "./Config.h"
-#include "./core/ObjectWriter.h"
+#include "./FirebaseConfig.h"
+#include "./core/Utils/ObjectWriter.h"
 
 #if defined(ENABLE_FIRESTORE)
-
 enum firestore_const_key_type
 {
     firestore_const_key_nullValue,
@@ -95,7 +94,6 @@ namespace Values
 
     class StringValue : public Printable
     {
-
     private:
         StringUtil sut;
         String buf, str;
@@ -152,7 +150,6 @@ namespace Values
 
     class IntegerValue : public Printable
     {
-
     private:
         String buf, str;
         ObjectWriter owriter;
@@ -164,7 +161,7 @@ namespace Values
          * A 64-bit signed integer value.
          *  @param value The 64-bit signed integer value.
          */
-        explicit IntegerValue(int64_t value) : buf(StringValue(sut.num2Str(value)).c_str()) { getVal(); }
+        explicit IntegerValue(int64_t value) : buf(StringValue(sut.numString(value)).c_str()) { getVal(); }
         const char *c_str() const { return buf.c_str(); }
         const char *val() { return getVal(); }
         size_t printTo(Print &p) const override { return p.print(str.c_str()); }
@@ -177,7 +174,6 @@ namespace Values
 
     class DoubleValue : public Printable
     {
-
     private:
         String buf, str;
         ObjectWriter owriter;
@@ -208,7 +204,6 @@ namespace Values
 
     class TimestampValue : public Printable
     {
-
     private:
         String buf, str;
         ObjectWriter owriter;
@@ -260,7 +255,6 @@ namespace Values
 
     class ReferenceValue : public Printable
     {
-
     private:
         String buf, str;
         ObjectWriter owriter;
@@ -329,7 +323,6 @@ namespace Values
 
     class ArrayValue : public Printable
     {
-
     private:
         String buf, str;
         ObjectWriter owriter;
@@ -401,7 +394,6 @@ namespace Values
      */
     class MapValue : public Printable
     {
-
     private:
         String buf, str;
         ObjectWriter owriter;
@@ -466,6 +458,5 @@ namespace Values
         void clear() { sut.clear(buf); }
     };
 };
-
 #endif
 #endif
