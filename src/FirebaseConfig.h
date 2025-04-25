@@ -53,7 +53,7 @@
  * ⛔ Use following build flag to disable.
  * -D DISABLE_RULESETS
  */
-#define ENABLE_RULESETS
+//#define ENABLE_RULESETS
 
 /**📍 For enabling PSRAM support
  * ⛔ Use following build flag to disable.

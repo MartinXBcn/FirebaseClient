@@ -303,9 +303,7 @@ set(Firebase_ESP_Client_SRCS
 
     src/core/Updater/OTAUpdater.cpp
 
-    src/core/JWT.cpp
-
-    src/core/JWT.cpp
+    src/core/JWT/JWT.cpp
     )
 set(Firebase_ESP_Client_INCL ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
