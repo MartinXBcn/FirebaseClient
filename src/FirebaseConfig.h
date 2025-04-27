@@ -29,7 +29,7 @@
  * ⛔ Use following build flag to disable.
  * -D DISABLE_MESSAGING
  */
-//#define ENABLE_MESSAGING
+#define ENABLE_MESSAGING
 
 /**📍 For Firebase Storage compilation
  * ⛔ Use following build flag to disable.
