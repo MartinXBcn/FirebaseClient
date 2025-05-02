@@ -32,6 +32,15 @@ using namespace firebase_ns;
 #if defined(ENABLE_MESSAGING)
 #include "./messaging/DataOptions.h"
 
+
+// Logging
+#undef MS_LOGGER_LEVEL
+#ifdef MS_FIREBASECLIENT_LOGGING
+#define MS_LOGGER_LEVEL MS_FIREBASECLIENT_LOGGING
+#endif
+#include "ESP32Logger.h"
+
+
 class Messaging : public AppBase
 {
     friend class AppBase;
@@ -107,6 +116,7 @@ private:
 
     AsyncResult *sendRequest(AsyncClientClass &aClient, AsyncResult *result, AsyncResultCallback cb, const String &uid, const Messages::Parent &parent, const String &payload, Messages::firebase_cloud_messaging_request_type requestType, bool async)
     {
+        DBGLOG(Info, "[Messaging] >> paylod: \n%s\n", payload.c_str());
         using namespace Messages;
         DataOptions options;
         options.requestType = requestType;
@@ -120,7 +130,9 @@ private:
 
         req_data aReq(&aClient, path, reqns::http_post, slot_options_t(false, false, async, false, false, false), &options, result, cb, uid);
         asyncRequest(aReq);
-        return aClient.getResult();
+        AsyncResult* ar = aClient.getResult();
+        DBGLOG(Info, "[Messaging] << debug():  %s", ar->debug().c_str());
+        return ar;
     }
 
     void asyncRequest(Messages::req_data &request, int beta = 0)
