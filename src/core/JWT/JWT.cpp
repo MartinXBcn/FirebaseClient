@@ -14,6 +14,11 @@
 #if defined(ENABLE_JWT)
 #include "JWT.h"
 
+
+// <MS>
+JWTClass JWT;
+
+
 #if defined(USE_EMBED_SSL_ENGINE) && !defined(CORE_MOCK)
 extern "C"
 {

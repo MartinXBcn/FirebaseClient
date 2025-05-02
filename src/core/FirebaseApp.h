@@ -18,7 +18,8 @@
 namespace firebase_ns
 {
 #if defined(ENABLE_JWT)
-    static JWTClass JWT;
+// <MS> Moved to JWT.h and JWT.cpp!
+//    static JWTClass JWT;
 #endif
 
     class FirebaseApp : public AppBase

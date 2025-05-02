@@ -81,5 +81,10 @@ namespace firebase_ns
         bool loop(auth_data_t *auth_data);
     };
 }
+
+
+// <MS>
+//extern JWTClass JWT;
+
 #endif
 #endif

@@ -312,7 +312,4 @@ idf_component_register(
     SRCS ${Firebase_ESP_Client_SRCS}
     REQUIRES 
         arduino 
-#        ms_Logger
-#        ms_Firebase
-        TinyGSM
     )
