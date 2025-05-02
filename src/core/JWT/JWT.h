@@ -84,7 +84,7 @@ namespace firebase_ns
 
 
 // <MS>
-//extern JWTClass JWT;
+extern JWTClass JWT;
 
 #endif
 #endif
