@@ -18,6 +18,8 @@
 #endif
 #include "ESP32Logger.h"
 
+#define dbglvl Debug
+
 
 namespace firebase_ns
 {
@@ -142,7 +144,7 @@ public:
 
     void stop()
     {
-        DBGLOG(Info, "[conn_handler] >>")
+        DBGLOG(dbglvl, "[conn_handler] >>")
         if (client_type == tcpc_sync)
         {
             if (client)
@@ -156,18 +158,18 @@ public:
 #endif
         }
         reset();
-        DBGLOG(Info, "[conn_handler] <<")
+        DBGLOG(dbglvl, "[conn_handler] <<")
     }
 
     void reset()
     {
-        DBGLOG(Info, "[conn_handler] >>")
+        DBGLOG(dbglvl, "[conn_handler] >>")
         host.remove(0, host.length());
         port = 0;
         this->connected = false;
         client_changed = false;
         network_changed = false;
-        DBGLOG(Info, "[conn_handler] <<")
+        DBGLOG(dbglvl, "[conn_handler] <<")
     }
 
     bool isChanged() { return client_changed || network_changed; }
