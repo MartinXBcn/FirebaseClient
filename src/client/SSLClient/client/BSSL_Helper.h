@@ -71,7 +71,9 @@
 
 #elif defined(USE_LIB_SSL_ENGINE)
 
-#include "../bssl/bearssl.h"
+// <MS>
+//#include "../bssl/bearssl.h"
+#include "bearssl/bearssl.h"
 
 #endif
 

@@ -12,6 +12,17 @@
 #define PUBLIC_DATABASE_RESULT_IMPL_BASE
 #endif
 
+
+// <MS> Logging
+#undef MS_LOGGER_LEVEL
+#ifdef MS_FIREBASECLIENT_LOGGING
+#define MS_LOGGER_LEVEL MS_FIREBASECLIENT_LOGGING
+#endif
+#include "ESP32Logger.h"
+
+#define dbglvl Debug
+
+
 using namespace firebase_ns;
 
 class AsyncClientClass PUBLIC_DATABASE_RESULT_IMPL_BASE
@@ -1051,8 +1062,12 @@ private:
                 return exitProcess(false);
 
             // Restart connection when authenticate, client or network changed
+            DBGLOG(dbglvl, 
+                "[AsyncClientClass] sData->sse: %s, sData->auth_ts: %u, auth_ts: %u, sman.conn.isChanged(): %s, sData->async: %s", 
+                DBGB2S(sData->sse), sData->auth_ts, auth_ts, DBGB2S(sman.conn.isChanged()), DBGB2S(sData->async))
             if ((sData->sse && sData->auth_ts != auth_ts) || sman.conn.isChanged())
             {
+                DBGLOG(Warn, "[AsyncClientClass] Restart connection");
                 sman.stop();
                 sData->state = astate_send_header;
             }
@@ -1063,6 +1078,9 @@ private:
                 sData->state = astate_send_header;
                 sman.conn.async = sData->async;
             }
+
+
+            DBGLOG(dbglvl, "[AsyncClientClass] sData->state: %i", sData->state);
 
             bool sending = false;
             if (sData->state == astate_undefined || sData->state == astate_send_header || sData->state == astate_send_payload)
@@ -1088,6 +1106,7 @@ private:
                     sData->response.feedTimer(!sData->async && sync_read_timeout_sec > 0 ? sync_read_timeout_sec : -1);
             }
 
+            DBGLOG(dbglvl, "[AsyncClientClass] sending: %s", DBGB2S(sending))
             if (sending)
             {
                 handleSendTimeout(sData);

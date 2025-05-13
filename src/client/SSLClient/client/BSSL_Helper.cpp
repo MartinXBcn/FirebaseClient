@@ -35,7 +35,9 @@
 #include "BSSL_Helper.h"
 #include <memory>
 #include <vector>
-#include "../bssl/bearssl.h"
+// <MS>
+//#include "../bssl/bearssl.h"
+#include "bearssl/bearssl.h"
 #include <stdlib.h>
 #include <string.h>
 #if defined __has_include

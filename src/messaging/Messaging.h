@@ -33,7 +33,7 @@ using namespace firebase_ns;
 #include "./messaging/DataOptions.h"
 
 
-// Logging
+// <MS> Logging
 #undef MS_LOGGER_LEVEL
 #ifdef MS_FIREBASECLIENT_LOGGING
 #define MS_LOGGER_LEVEL MS_FIREBASECLIENT_LOGGING

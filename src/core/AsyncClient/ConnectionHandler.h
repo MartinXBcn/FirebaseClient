@@ -10,6 +10,15 @@
 #include "./core/AsyncClient/AsyncTCPConfig.h"
 #endif
 
+
+// <MS> Logging
+#undef MS_LOGGER_LEVEL
+#ifdef MS_FIREBASECLIENT_LOGGING
+#define MS_LOGGER_LEVEL MS_FIREBASECLIENT_LOGGING
+#endif
+#include "ESP32Logger.h"
+
+
 namespace firebase_ns
 {
     enum function_return_type
@@ -133,6 +142,7 @@ public:
 
     void stop()
     {
+        DBGLOG(Info, "[conn_handler] >>")
         if (client_type == tcpc_sync)
         {
             if (client)
@@ -146,15 +156,18 @@ public:
 #endif
         }
         reset();
+        DBGLOG(Info, "[conn_handler] <<")
     }
 
     void reset()
     {
+        DBGLOG(Info, "[conn_handler] >>")
         host.remove(0, host.length());
         port = 0;
         this->connected = false;
         client_changed = false;
         network_changed = false;
+        DBGLOG(Info, "[conn_handler] <<")
     }
 
     bool isChanged() { return client_changed || network_changed; }

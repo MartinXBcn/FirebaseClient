@@ -16,6 +16,18 @@
 
 
 // <MS>
+//#include "SHA256.h"
+
+
+// <MS> Logging
+#undef MS_LOGGER_LEVEL
+#ifdef MS_FIREBASECLIENT_LOGGING
+#define MS_LOGGER_LEVEL MS_FIREBASECLIENT_LOGGING
+#endif
+#include "ESP32Logger.h"
+
+
+// <MS>
 JWTClass JWT;
 
 
@@ -63,6 +75,7 @@ bool JWTClass::ready() { return this->auth_data && this->auth_data->user_auth.sa
 
 bool JWTClass::loop(auth_data_t *auth_data)
 {
+    DBGLOG(Debug, "[JWTClass] >> this: %p", this)
     if (auth_data && auth_data->user_auth.jwt_signing)
     {
         bool ret = begin(auth_data);
@@ -75,8 +88,10 @@ bool JWTClass::loop(auth_data_t *auth_data)
             else
                 sendErrCB(auth_data->cb, nullptr);
         }
+        DBGLOG(Debug, "[JWTClass] << return: %s", ret ? "true" : "false")
         return ret;
     }
+    DBGLOG(Debug, "[JWTClass] << return: false")
     return false;
 }
 

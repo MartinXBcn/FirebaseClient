@@ -4,6 +4,17 @@
 #include <Arduino.h>
 #include "./core/AsyncResult/AsyncResult.h"
 
+
+// <MS> Logging
+#undef MS_LOGGER_LEVEL
+#ifdef MS_FIREBASECLIENT_LOGGING
+#define MS_LOGGER_LEVEL MS_FIREBASECLIENT_LOGGING
+#endif
+#include "ESP32Logger.h"
+
+#define dbglvl Debug
+
+
 struct cvec_address_info_t
 {
     uint32_t cvec_addr = 0;
@@ -38,6 +49,8 @@ public:
     {
         std::vector<uint32_t> cVec = *reinterpret_cast<std::vector<uint32_t> *>(cvec_addr);
 
+        DBGLOG(dbglvl, "[AppBase] >> cVec.size(): %d", cVec.size())
+
         for (size_t i = 0; i < cVec.size(); i++)
         {
             AsyncClientClass *client = reinterpret_cast<AsyncClientClass *>(cVec[i]);
@@ -51,6 +64,8 @@ public:
                 client->handleRemove();
             }
         }
+
+        DBGLOG(dbglvl, "[AppBase] <<")
     }
 
 private:
