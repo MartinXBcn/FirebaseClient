@@ -23,7 +23,7 @@
 #endif
 #include "ESP32Logger.h"
 
-#define dbglvl Debug
+#define fbdbglvl Debug
 
 namespace firebase_ns
 {
@@ -71,7 +71,7 @@ namespace firebase_ns
 
         void appLoop()
         {
-            DBGLOG(dbglvl, "[FirebaseApp] >>")
+            DBGLOG(fbdbglvl, "[FirebaseApp] >>")
 #if defined(ENABLE_JWT)
             if (auth_data.user_auth.auth_type == auth_sa_access_token || auth_data.user_auth.auth_type == auth_sa_custom_token)
             {
@@ -84,7 +84,7 @@ namespace firebase_ns
             auth_data.user_auth.jwt_loop = true;
             DBGCOD(bool ret = )
             processAuth();
-            DBGLOG(dbglvl, "[FirebaseApp] processAuth() returned: %s", DBGB2S(ret))
+            DBGLOG(fbdbglvl, "[FirebaseApp] processAuth() returned: %s", DBGB2S(ret))
             auth_data.user_auth.jwt_loop = false;
 
             if (this->resultCb && getRefResult())
@@ -98,7 +98,7 @@ namespace firebase_ns
                 cvec_address_info_t cvec_address_info = cvec_address_list[i];
                 staticLoop(cvec_address_info.app_token, cvec_address_info.cvec_addr);
             }
-            DBGLOG(dbglvl, "[FirebaseApp] <<")
+            DBGLOG(fbdbglvl, "[FirebaseApp] <<")
         }
 
         void await(unsigned long timeoutMs = 0)

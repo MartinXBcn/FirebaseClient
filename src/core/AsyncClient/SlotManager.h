@@ -8,6 +8,15 @@
 #include "./core/AsyncClient/AsyncData.h"
 #include "./core/Debug.h"
 
+
+// <MS> Logging
+#undef MS_LOGGER_LEVEL
+#ifdef MS_FIREBASECLIENT_LOGGING
+#define MS_LOGGER_LEVEL MS_FIREBASECLIENT_LOGGING
+#endif
+#include "ESP32Logger.h"
+
+
 #if defined(ENABLE_DATABASE)
 #define PUBLIC_DATABASE_RESULT_IMPL_BASE : public RTDBResultImpl
 #else
@@ -154,8 +163,10 @@ public:
         // data available from sync and asyn request except for sse
         returnResult(sData, true);
         reset(sData, sData->auth_used);
-        if (!sData->auth_used)
+        if (!sData->auth_used) {
+            DBGLOG(Info, "[AsyncClientClass] delete sData, pointer: %p", sData);
             delete sData;
+        }
         sData = nullptr;
         sVec.erase(sVec.begin() + slot);
     }

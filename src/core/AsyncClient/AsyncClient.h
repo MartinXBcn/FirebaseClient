@@ -1238,6 +1238,7 @@ public:
         {
             sman.reset(sman.getData(i), true);
             async_data *sData = sman.getData(i);
+            DBGLOG(Info, "[AsyncClientClass] delete sData, pointer: %p", sData);
             delete sData;
             sData = nullptr;
         }
