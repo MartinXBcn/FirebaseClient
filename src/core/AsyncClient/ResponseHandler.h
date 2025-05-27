@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: 2025 Suwatchai K. <suwatchai@outlook.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #ifndef CORE_ASYNC_CLIENT_RESPONSE_HANDLER_H
 #define CORE_ASYNC_CLIENT_RESPONSE_HANDLER_H
 
@@ -7,9 +13,6 @@
 #include "./core/AsyncClient/ConnectionHandler.h"
 #include "./core/AsyncClient/RequestHandler.h"
 #include "./core/Utils/StringUtil.h"
-#if defined(ENABLE_ASYNC_TCP_CLIENT)
-#include "./core/AsyncClient/AsyncTCPConfig.h"
-#endif
 
 namespace resns
 {
@@ -79,9 +82,8 @@ public:
     Timer read_timer;
     bool auth_data_available = false;
 
-    tcp_client_type client_type;
+    tcp_client_type client_type = tcpc_sync;
     Client *client = nullptr;
-    void *atcp_config = nullptr;
 
     res_handler() {}
 
@@ -94,11 +96,10 @@ public:
         toFillIndex = 0;
     }
 
-    void setClient(tcp_client_type client_type, Client *client, void *atcp_config)
+    void setClient(tcp_client_type client_type, Client *client)
     {
         this->client_type = client_type;
         this->client = client;
-        this->atcp_config = atcp_config;
     }
 
     void clear()
@@ -147,25 +148,6 @@ public:
     {
         if (client_type == tcpc_sync)
             return client ? client->available() : 0;
-        else
-        {
-#if defined(ENABLE_ASYNC_TCP_CLIENT)
-            AsyncTCPConfig *async_tcp_config = reinterpret_cast<AsyncTCPConfig *>(atcp_config);
-            if (!async_tcp_config && !async_tcp_config->tcpReceive)
-                return 0;
-
-            uint8_t buf[1];
-            async_tcp_config->tcpReceive(buf, 1, async_tcp_config->filledSize, async_tcp_config->available);
-
-            if (async_tcp_config->filledSize)
-            {
-                memcpy(async_tcp_config->buff + async_tcp_config->buffPos, buf, async_tcp_config->filledSize);
-                async_tcp_config->buffPos++;
-            }
-
-            return async_tcp_config->available;
-#endif
-        }
 
         return 0;
     }
@@ -174,33 +156,6 @@ public:
     {
         if (client_type == tcpc_sync)
             return client ? client->read() : -1;
-        else
-        {
-#if defined(ENABLE_ASYNC_TCP_CLIENT)
-
-            AsyncTCPConfig *async_tcp_config = reinterpret_cast<AsyncTCPConfig *>(atcp_config);
-            if (!async_tcp_config && !async_tcp_config->tcpReceive)
-                return 0;
-
-            if (async_tcp_config->buffPos)
-            {
-                uint8_t v = async_tcp_config->buff[0];
-                async_tcp_config->buffPos--;
-
-                if (async_tcp_config->buffPos)
-                    memmove(async_tcp_config->buff, async_tcp_config->buff + 1, async_tcp_config->buffPos);
-
-                return v;
-            }
-
-            async_tcp_config->tcpReceive(async_tcp_config->buff, 1, async_tcp_config->filledSize, async_tcp_config->available);
-
-            if (async_tcp_config->filledSize)
-                async_tcp_config->buffPos = async_tcp_config->filledSize;
-
-            return async_tcp_config->filledSize ? async_tcp_config->buff[0] : -1;
-#endif
-        }
 
         return 0;
     }
@@ -209,44 +164,6 @@ public:
     {
         if (client_type == tcpc_sync)
             return client ? client->read(buf, size) : -1;
-        else
-        {
-#if defined(ENABLE_ASYNC_TCP_CLIENT)
-            AsyncTCPConfig *async_tcp_config = reinterpret_cast<AsyncTCPConfig *>(atcp_config);
-            if (!async_tcp_config && !async_tcp_config->tcpReceive)
-                return 0;
-
-            int pos = 0;
-            if (async_tcp_config->buffPos)
-            {
-                int read = async_tcp_config->buffPos;
-                if (read > (int)size)
-                    read = size;
-
-                memcpy(buf, async_tcp_config->buff, read);
-                async_tcp_config->buffPos -= read;
-
-                if (async_tcp_config->buffPos)
-                    memmove(async_tcp_config->buff, async_tcp_config->buff + read, async_tcp_config->buffPos);
-
-                if ((int)size <= read)
-                    return read;
-
-                pos = read;
-                size -= read;
-            }
-
-            if (size > 0)
-            {
-                async_tcp_config->buffPos = 0;
-                uint8_t buff[size];
-                async_tcp_config->tcpReceive(buff + pos, size, async_tcp_config->filledSize, async_tcp_config->available);
-                return async_tcp_config->filledSize ? async_tcp_config->filledSize : -1;
-            }
-
-            return -1;
-#endif
-        }
 
         return 0;
     }
@@ -304,7 +221,7 @@ public:
     {
         if (!client || !out)
             return 0;
-        int res = 0, read = 0;
+        int res = 0;
         String line;
 
         // because chunks might span multiple reads, we need to keep track of where we are in the chunk
@@ -330,7 +247,7 @@ public:
             // if chunk-size is 0, it's the last chunk, and can be skipped
             if (chunkInfo.chunkSize > 0)
             {
-                read = readLine(&line);
+                int read = readLine(&line);
 
                 // if we read till a CRLF, we have a chunk (or the rest of it)
                 // if the last two bytes are NOT CRLF, we have a partial chunk
@@ -359,17 +276,12 @@ public:
                     if (chunkInfo.dataLen == chunkInfo.chunkSize)
                         chunkInfo.phase = READ_CHUNK_SIZE;
                 }
-                // if we read 0 bytes, read next chunk size
-                else
-                {
+                else // if we read 0 bytes, read next chunk size
                     chunkInfo.phase = READ_CHUNK_SIZE;
-                }
             }
             else
             {
-
-                read = readLine(&line);
-
+                int read = readLine(&line);
                 // CRLF (end of chunked body)
                 if (read == 2 && line[0] == '\r' && line[1] == '\n')
                     res = -1;
@@ -404,7 +316,7 @@ public:
 
     uint32_t hex2int(const char *hex)
     {
-        uint32_t val = 0;
+        uint32_t num = 0;
         while (*hex)
         {
             // get current character then increment
@@ -417,9 +329,9 @@ public:
             else if (byte >= 'A' && byte <= 'F')
                 byte = byte - 'A' + 10;
             // shift 4 to make space for new digit, and add the 4 bits of the new digit
-            val = (val << 4) | (byte & 0xF);
+            num = (num << 4) | (byte & 0xF);
         }
-        return val;
+        return num;
     }
 
     int readLine(String *buf = nullptr)

@@ -1,6 +1,4 @@
 /*
-  Updated June 12, 2004.
-  
   WiFiClientBearSSL- SSL client/server for esp8266 using BearSSL libraries
   - Mostly compatible with Arduino WiFi shield library and standard
     WiFiClient/ServerSecure (except for certificate handling).
@@ -24,27 +22,13 @@
 #ifndef BSSL_HELPER_CPP
 #define BSSL_HELPER_CPP
 
-#pragma GCC diagnostic ignored "-Wunused-function"
-#pragma GCC diagnostic ignored "-Wvla"
+#include "BSSL_Helper.h"
 
-#include <Arduino.h>
-#include "../ESP_SSLClient_FS.h"
-#include "../ESP_SSLClient_Const.h"
 #if defined(USE_LIB_SSL_ENGINE)
 
-#include "BSSL_Helper.h"
-#include <memory>
-#include <vector>
 // <MS>
 //#include "../bssl/bearssl.h"
-#include "bearssl/bearssl.h"
-#include <stdlib.h>
-#include <string.h>
-#if defined __has_include
-#if __has_include(<pgmspace.h>)
-#include <pgmspace.h>
-#endif
-#endif
+//#include "bearssl/bearssl.h"
 
 namespace key_bssl
 {

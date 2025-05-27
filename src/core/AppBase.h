@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: 2025 Suwatchai K. <suwatchai@outlook.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #ifndef CORE_APP_BASE_H
 #define CORE_APP_BASE_H
 
@@ -45,7 +51,7 @@ public:
         }
     }
 
-    static void staticLoop(app_token_t *aToken, uint32_t cvec_addr)
+    static void staticLoop(const app_token_t *aToken, uint32_t cvec_addr)
     {
         std::vector<uint32_t> cVec = *reinterpret_cast<std::vector<uint32_t> *>(cvec_addr);
 
@@ -105,7 +111,7 @@ private:
 
     void resetAppImpl()
     {
-        if (this->app_addr && this->cvec_address_list_addr && reinterpret_cast<std::vector<cvec_address_info_t> *>(this->cvec_address_list_addr))
+        if (this->app_addr && this->cvec_address_list_addr > 0)
             removeCvecAddressList(reinterpret_cast<std::vector<cvec_address_info_t> *>(this->cvec_address_list_addr), this->app_addr);
         this->app_addr = 0;
         this->app_token = nullptr;
@@ -113,7 +119,7 @@ private:
         this->ul_dl_task_running_addr = 0;
     }
 
-    void loopImpl(const char *src)
+    void loopImpl()
     {
 
         if (displayInfoTimer.remaining() == 0 || !displayInfoTimer.isRunning())
@@ -148,7 +154,7 @@ protected:
     void addRemoveClientVecBase(AsyncClientClass *aClient, uint32_t cvec_addr, bool add) { aClient->addRemoveClientVec(cvec_addr, add); }
     void handleRemoveBase(AsyncClientClass *aClient) { aClient->handleRemove(); }
     void removeSlotBase(AsyncClientClass *aClient, uint8_t slot, bool sse = true) { aClient->removeSlot(slot, sse); }
-    size_t slotCountBase(AsyncClientClass *aClient) { return aClient->slotCount(); }
+    size_t slotCountBase(const AsyncClientClass *aClient) { return aClient->slotCount(); }
     void setLastErrorBase(AsyncResult *aResult, int code, const String &message)
     {
         if (aResult)

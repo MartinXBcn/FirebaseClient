@@ -1,8 +1,13 @@
+/*
+ * SPDX-FileCopyrightText: 2025 Suwatchai K. <suwatchai@outlook.com>
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
 #ifndef CORE_AUTH_USER_AUTH_DATA_H
 #define CORE_AUTH_USER_AUTH_DATA_H
 
 #include <Arduino.h>
-#include "./FirebaseConfig.h"
 #include "./core/File/FileConfig.h"
 #include "./core/Auth/Data/ServiceData.h"
 #include "./core/Auth/Data/CustomData.h"
