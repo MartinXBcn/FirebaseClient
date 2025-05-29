@@ -9,6 +9,15 @@
 
 #include "./core/Auth/Token/AppToken.h"
 
+
+// <MS> Logging
+#undef MS_LOGGER_LEVEL
+#ifdef MS_FIREBASECLIENT_LOGGING
+#define MS_LOGGER_LEVEL MS_FIREBASECLIENT_LOGGING
+#endif
+#include "ESP32Logger.h"
+
+
 using namespace firebase_ns;
 
 struct slot_options_t
@@ -28,5 +37,14 @@ public:
         this->no_etag = no_etag;
         this->auth_param = auth_param;
     }
-};
+
+    // <MS>
+    std::string toString() const
+    {
+        char buffer[256];
+        snprintf(buffer, sizeof(buffer),
+                "auth_used: %s, sse: %s, async: %s, sv: %s, ota: %s, no_etag: %s, auth_param: %s",
+                DBGB2S(auth_used), DBGB2S(sse), DBGB2S(async), DBGB2S(sv), DBGB2S(ota), DBGB2S(no_etag), DBGB2S(auth_param));
+        return std::string(buffer);    }
+    };
 #endif

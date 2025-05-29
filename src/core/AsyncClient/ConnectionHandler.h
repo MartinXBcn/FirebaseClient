@@ -19,7 +19,7 @@
 #endif
 #include "ESP32Logger.h"
 
-#define dbglvl Debug
+#define dbglvlchandler Debug
 
 
 namespace firebase_ns
@@ -109,24 +109,24 @@ public:
 
     void stop()
     {
-        DBGLOG(dbglvl, "[conn_handler] >>")
+        DBGLOG(dbglvlchandler, "[conn_handler] >>")
         if (client_type == tcpc_sync)
         {
             if (client)
                 client->stop();
         }
         reset();
-        DBGLOG(dbglvl, "[conn_handler] <<")
+        DBGLOG(dbglvlchandler, "[conn_handler] <<")
     }
 
     void reset()
     {
-        DBGLOG(dbglvl, "[conn_handler] >>")
+        DBGLOG(dbglvlchandler, "[conn_handler] >>")
         host.remove(0, host.length());
         port = 0;
         this->connected = false;
         client_changed = false;
-        DBGLOG(dbglvl, "[conn_handler] <<")
+        DBGLOG(dbglvlchandler, "[conn_handler] <<")
     }
 
     bool isChanged() { return client_changed; }

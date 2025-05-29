@@ -18,7 +18,7 @@
 #endif
 #include "ESP32Logger.h"
 
-#define dbglvl Debug
+#define dbglvlappbase Debug
 
 
 struct cvec_address_info_t
@@ -55,7 +55,7 @@ public:
     {
         std::vector<uint32_t> cVec = *reinterpret_cast<std::vector<uint32_t> *>(cvec_addr);
 
-        DBGLOG(dbglvl, "[AppBase] >> cVec.size(): %d", cVec.size())
+        DBGLOG(dbglvlappbase, "[AppBase] >> cVec.size(): %d", cVec.size())
 
         for (size_t i = 0; i < cVec.size(); i++)
         {
@@ -71,7 +71,7 @@ public:
             }
         }
 
-        DBGLOG(dbglvl, "[AppBase] <<")
+        DBGLOG(dbglvlappbase, "[AppBase] <<")
     }
 
 private:

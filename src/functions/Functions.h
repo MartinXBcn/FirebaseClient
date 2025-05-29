@@ -11,6 +11,15 @@
 #include "./core/FirebaseApp.h"
 #include "./functions/DataOptions.h"
 
+
+// <MS> Logging
+#undef MS_LOGGER_LEVEL
+#ifdef MS_FIREBASECLIENT_LOGGING
+#define MS_LOGGER_LEVEL MS_FIREBASECLIENT_LOGGING
+#endif
+#include "ESP32Logger.h"
+
+
 using namespace firebase_ns;
 
 #if defined(ENABLE_FUNCTIONS)
@@ -770,6 +779,26 @@ private:
         if (request.aResult)
             sData->setRefResult(request.aResult, reinterpret_cast<uint32_t>(&(request.aClient->getResultList())));
 
+        DBGLOG(Info, 
+            "[GoogleCloudFunctions]"
+            "\nrequest..."
+            "\npath:    %s"
+            "\nuid:     %s"
+            "\nmime:    %s"
+            "\nmethod:  %i"
+            "\nopt:     %s"
+            "\noptions: .payload: %s, .extras: %s, .requestType: %i"
+            "\naClient: %s",
+            request.path.c_str(),
+            request.uid.c_str(),
+            request.mime.c_str(),
+            request.method,
+            request.opt.toString().c_str(),
+            request.options ? request.options->payload.c_str() : "NULL",
+            request.options ? request.options->extras.c_str() : "NULL",
+            request.aClient ? request.aClient->toString().c_str() : "NULL"
+        )
+
         request.aClient->process(sData->async);
         request.aClient->handleRemove();
     }
@@ -777,7 +806,12 @@ private:
     void setFileStatus(async_data *sData, const GoogleCloudFunctions::req_data &request)
     {
         using namespace reqns;
-        if ((request.file && request.file->filename.length()) || request.opt.ota)
+        if ((request.file
+// <MS>
+#if defined(ENABLE_FS)
+             && request.file->filename.length()
+#endif             
+            ) || request.opt.ota)
         {
             sData->download = request.method == http_get;
             sData->upload = request.method == http_post || request.method == http_put || request.method == http_patch;

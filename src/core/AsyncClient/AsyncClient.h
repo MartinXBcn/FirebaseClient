@@ -26,7 +26,7 @@
 #endif
 #include "ESP32Logger.h"
 
-#define dbglvl Debug
+#define dbglvlaclient Debug
 
 
 using namespace firebase_ns;
@@ -1056,7 +1056,7 @@ private:
                 return exitProcess(false);
 
             // Restart connection when authenticate, client or network changed
-            DBGLOG(dbglvl, 
+            DBGLOG(dbglvlaclient, 
                 "[AsyncClientClass] sData->sse: %s, sData->auth_ts: %u, auth_ts: %u, sman.conn.isChanged(): %s, sData->async: %s", 
                 DBGB2S(sData->sse), sData->auth_ts, auth_ts, DBGB2S(sman.conn.isChanged()), DBGB2S(sData->async))
             if ((sData->sse && sData->auth_ts != auth_ts) || sman.conn.isChanged())
@@ -1074,7 +1074,7 @@ private:
             }
 
 
-            DBGLOG(dbglvl, "[AsyncClientClass] sData->state: %i", sData->state);
+            DBGLOG(dbglvlaclient, "[AsyncClientClass] sData->state: %i", sData->state);
 
             bool sending = false;
             if (sData->state == astate_undefined || sData->state == astate_send_header || sData->state == astate_send_payload)
@@ -1100,7 +1100,7 @@ private:
                     sData->response.feedTimer(!sData->async && sync_read_timeout_sec > 0 ? sync_read_timeout_sec : -1);
             }
 
-            DBGLOG(dbglvl, "[AsyncClientClass] sending: %s", DBGB2S(sending))
+            DBGLOG(dbglvlaclient, "[AsyncClientClass] sending: %s", DBGB2S(sending))
             if (sending)
             {
                 handleSendTimeout(sData);
@@ -1340,6 +1340,19 @@ public:
         sman.conn.setClientChange();
         this->addr = reinterpret_cast<uint32_t>(this);
         sman.client_type = tcpc_sync;
+    }
+
+    // <MS>
+    std::string toString() const
+    {
+        return "AsyncClientClass: {"
+               "addr: " + std::to_string(addr) +
+               ", client_type: " + std::to_string(sman.client_type) +
+               ", sync_send_timeout_sec: " + std::to_string(sync_send_timeout_sec) +
+               ", sync_read_timeout_sec: " + std::to_string(sync_read_timeout_sec) +
+               ", session_timeout_sec: " + std::to_string(sman.session_timeout_sec) +
+               ", cvec_addr: " + std::to_string(cvec_addr) +
+               "}";
     }
 };
 #endif
