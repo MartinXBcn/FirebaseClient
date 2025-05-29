@@ -8,7 +8,7 @@
 #define CORE_JWT_JWT_CPP
 
 #include <Arduino.h>
-#include "..\Options.h"
+#include "../Options.h"
 #include "JWT.h"
 
 
