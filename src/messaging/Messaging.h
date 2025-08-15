@@ -157,12 +157,14 @@ private:
         if (request.aResult)
             sData->setRefResult(request.aResult, reinterpret_cast<uint32_t>(&(request.aClient->getResultList())));
 
+/* <MS> Looks like that it was removed with 2.1.8.            
         sData->download = request.method == reqns::http_get
 // <MS>
 #if defined(ENABLE_FS)
          && sData->request.file_data.filename.length()
 #endif         
         ;
+*/        
         request.aClient->process(sData->async);
         request.aClient->handleRemove();
     }

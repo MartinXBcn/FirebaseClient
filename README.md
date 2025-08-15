@@ -68,7 +68,7 @@ In Library Manager Window, search **"firebase"** in the search form then select 
 
 Click **"Install"** button.
 
-For `PlatformIO` IDE, using the following command.
+For `PlatformIO` IDE, use the following command.
 
 **pio lib install "FirebaseClient""**
 
@@ -115,25 +115,25 @@ See this Arduino-Pico SDK [documentation](https://arduino-pico.readthedocs.io/en
 
 For new `Firebase` users, please read the [Project Preparation and Setup](#project-preparation-and-setup) section for preparing the Firebase project.
 
-For new library user that the project was setup and prepared, see the [bare minimun examples](/examples/BareMinimum/) to start using this library with minimum code that requires by this library.
+For new library user that the project was setup and prepared, see the [bare minimun examples](/examples/BareMinimum/) to start using this library with minimum code that is required by this library.
 
 For more examples, please click [here](/examples/).
 
 ### Working Principle 
 
-This library can be used in two modes i.e. async mode and await or sinc mode.
+This library can be used in two modes i.e. async mode and await or sync mode.
 
-With async mode, the task will store in the FIFO queue. The result of the running task can be obtained via the callback function or the proxy object that assign when calling the functions.
+With async mode, the task will be stored in the FIFO queue. The result of the running task can be obtained via the callback function or the proxy object that assign when calling the functions.
 
 The `AsyncClientClass` is the proxy class that provides the queue for async tasks and also the information of task process when working in await or sync mode.
 
 The async task that is stored in the queue contains the preprocess HTTP request data (headers without auth tokens and payload). 
 
-The SSL Client that assign with the `AsyncClientClass` constructor will be the network client used for all async tasks in its queue.
+The SSL Client that is assigned with the `AsyncClientClass` constructor will be the network client used for all async tasks in its queue.
 
 The result of a async task can be obtained from the `AsyncResult` class object. This object provides the debug, authentication process event, error information and the response payload of the request.
 
-If no async callback function assigned with the function, the `AsyncResult` class object should be assigned otherwise it will work in sync mode.
+If no async callback function is assigned with the function, the `AsyncResult` class object should be assigned otherwise it will work in sync mode.
 
 In this case, it should be polling read for new available information from the `AsyncResult` at the end of the loop function.
 
@@ -213,7 +213,7 @@ The [Internal_Storage_OTA](https://github.com/mobizt/Internal_Storage_OTA) is th
 
 To allow OTA update in SAMD21 Arduino boards, you have to include `Internal_Storage_OTA.h` in your sketch.
 
-Then assign the `InternalStorage` class object to be used for `Realtume Database` via `RealtumeDatabase::setOTAStorage`,  for `Google Cloud Storage` via `CloudStorage::setOTAStorage` and for `Firebase Storage` via `Storage::setOTAStorage`
+Then assign the `InternalStorage` class object to be used for `Realtime Database` via `RealtumeDatabase::setOTAStorage`,  for `Google Cloud Storage` via `CloudStorage::setOTAStorage` and for `Firebase Storage` via `Storage::setOTAStorage`
 
 In SAMD21 Arduino boards, if `OTA Storage` was not set before calling OTA function, the error `OTA Storage was not set` will be occurred.
 
@@ -667,7 +667,7 @@ As in ESP8266, once the external Heap memory was selected in IDE, to allow the l
 
 The library build options are defined as preprocessor macros (`#define name`).
 
-Since version 2.1.0, there are no predefined build options, user needs to define what he want to use before compiling. 
+Since version 2.1.0, there are no predefined build options, user needs to define what he wants to use before compiling. 
 
 The build options can be defined before including the library header file `FirebaseClient.h` or as the compiler build flags.
 
@@ -700,6 +700,16 @@ ENABLE_ID_TOKEN
 ENABLE_LEGACY_TOKEN
 ```
 
+## Known Issues
+
+### Slow Arduino IDE Compilation Speed
+
+Normally this issue can be existed due to large anount of files to be compiled and anti virus software interference.
+
+This library contains the large anount of C files from `BearSSL` engine used in the internal `ESP_SSLClient` library which will be used only when the `ServiceAuth`, `CustomAuth` and `ESP_SSLClient` classes are used. This can increase the compilation time.
+
+If `ServiceAuth`, `CustomAuth` and `ESP_SSLClient` classes are not used in your code, you can remove or delete the `src/client` folder to reduce the Arduino IDE compilation time.  
+
 ## License
 
 The codes and examples in this repository are licensed under the MIT License. 
@@ -712,4 +722,4 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 
 `THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.`
 
-*Last updated 2025-05-26 UTC.*
+*Last updated 2025-08-09 UTC.*
