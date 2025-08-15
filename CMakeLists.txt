@@ -1,9 +1,9 @@
 
 set(Firebase_ESP_Client_SRCS 
-    src/client/SSLClient/client/BSSL_CertStore.cpp
-    src/client/SSLClient/client/BSSL_Helper.cpp
-    src/client/SSLClient/client/BSSL_TCP_Client.cpp
-    src/client/SSLClient/client/BSSL_SSL_Client.cpp
+#    src/client/SSLClient/client/BSSL_CertStore.cpp
+#    src/client/SSLClient/client/BSSL_Helper.cpp
+#    src/client/SSLClient/client/BSSL_TCP_Client.cpp
+#    src/client/SSLClient/client/BSSL_SSL_Client.cpp
 
     src/core/Updater/OTAUpdater.cpp
 
