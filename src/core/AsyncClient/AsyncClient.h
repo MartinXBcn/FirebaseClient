@@ -1047,13 +1047,17 @@ private:
 
     void addRemoveClientVec(uint32_t cvec_addr, bool add)
     {
+        DBGLOG(Info, "[AsyncClientClass] >> cvec_addr: %u, add: %s", cvec_addr, DBGB2S(add))
         this->cvec_addr = cvec_addr;
         if (cvec_addr > 0)
         {
             std::vector<uint32_t> *cVec = reinterpret_cast<std::vector<uint32_t> *>(cvec_addr);
             List v;
+            DBGLOG(Info, "[AsyncClientClass] >> cVec.size(): %u", cVec->size())
+            DBGLOG(Info, "[AsyncClientClass] >> this->addr: %u", this->addr)
             v.addRemoveList(*cVec, this->addr, add);
         }
+        DBGLOG(Info, "[AsyncClientClass] <<")
     }
 
     void exitProcess(bool status) { inProcess = status; }
@@ -1232,16 +1236,19 @@ public:
 
     ~AsyncClientClass()
     {
+        DBGLOG(Info, "[AsyncClientClass] >>")
         sman.stop();
         for (size_t i = 0; i < sman.sVec.size(); i++)
         {
             sman.reset(sman.getData(i), true);
             async_data *sData = sman.getData(i);
-            DBGLOG(Info, "[AsyncClientClass] delete sData, pointer: %p", sData);
+            DBGLOG(Info, "[AsyncClientClass] delete sData, pointer: %p", sData)
             delete sData;
             sData = nullptr;
         }
+        DBGLOG(Info, "[AsyncClientClass] addRemoveClientVec(cvec_addr: %u, false) ...", cvec_addr)
         addRemoveClientVec(cvec_addr, false);
+        DBGLOG(Info, "[AsyncClientClass] <<")
     }
 
     /**
