@@ -1053,8 +1053,8 @@ private:
         {
             std::vector<uint32_t> *cVec = reinterpret_cast<std::vector<uint32_t> *>(cvec_addr);
             List v;
-            DBGLOG(Info, "[AsyncClientClass] >> cVec.size(): %u", cVec->size())
-            DBGLOG(Info, "[AsyncClientClass] >> this->addr: %u", this->addr)
+            DBGLOG(Info, "[AsyncClientClass] cVec.size(): %u", cVec->size())
+            DBGLOG(Info, "[AsyncClientClass] this->addr: %u", this->addr)
             v.addRemoveList(*cVec, this->addr, add);
         }
         DBGLOG(Info, "[AsyncClientClass] <<")
