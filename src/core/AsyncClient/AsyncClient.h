@@ -1095,7 +1095,9 @@ private:
                 DBGB2S(sData->sse), sData->auth_ts, auth_ts, DBGB2S(sman.conn.isChanged()), DBGB2S(sData->async))
             if ((sData->sse && sData->auth_ts != auth_ts) || sman.conn.isChanged())
             {
-                DBGLOG(Warn, "[AsyncClientClass] Restart connection");
+                DBGLOG(Warn, 
+                    "[AsyncClientClass] Restart connection, sData->sse: %s, sData->auth_ts: %u, auth_ts: %u, sman.conn.isChanged(): %s, sData->async: %s", 
+                    DBGB2S(sData->sse), sData->auth_ts, auth_ts, DBGB2S(sman.conn.isChanged()), DBGB2S(sData->async))
                 sman.stop();
                 sData->state = astate_send_header;
             }
