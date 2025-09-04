@@ -1047,17 +1047,17 @@ private:
 
     void addRemoveClientVec(uint32_t cvec_addr, bool add)
     {
-        DBGLOG(Info, "[AsyncClientClass] >> cvec_addr: %u, add: %s", cvec_addr, DBGB2S(add))
+        DBGLOG(dbglvlaclient, "[AsyncClientClass] >> cvec_addr: %u, add: %s", cvec_addr, DBGB2S(add))
         this->cvec_addr = cvec_addr;
         if (cvec_addr > 0)
         {
             std::vector<uint32_t> *cVec = reinterpret_cast<std::vector<uint32_t> *>(cvec_addr);
             List v;
-            DBGLOG(Info, "[AsyncClientClass] cVec.size(): %u", cVec->size())
-            DBGLOG(Info, "[AsyncClientClass] this->addr: %u", this->addr)
+            DBGLOG(dbglvlaclient, "[AsyncClientClass] cVec.size(): %u", cVec->size())
+            DBGLOG(dbglvlaclient, "[AsyncClientClass] this->addr: %u", this->addr)
             v.addRemoveList(*cVec, this->addr, add);
         }
-        DBGLOG(Info, "[AsyncClientClass] <<")
+        DBGLOG(dbglvlaclient, "[AsyncClientClass] <<")
     }
 
     void exitProcess(bool status) { inProcess = status; }

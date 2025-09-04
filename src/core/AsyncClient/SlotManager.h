@@ -167,7 +167,7 @@ public:
         returnResult(sData, true);
         reset(sData, sData->auth_used);
         if (!sData->auth_used) {
-            DBGLOG(Info, "[AsyncClientClass] delete sData, pointer: %p", sData);
+            DBGLOG(Debug, "[AsyncClientClass] delete sData, pointer: %p", sData);
             delete sData;
         }
         sData = nullptr;
