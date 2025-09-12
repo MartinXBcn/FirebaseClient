@@ -82,6 +82,7 @@ namespace firebase_ns
             DBGCOD(bool ret = )
             processAuth();
             DBGLOG(fbdbglvl, "[FirebaseApp] processAuth() returned: %s", DBGB2S(ret))
+            DBGCHX(Debug, ret, "processAuth() failed!", "processAuth() ok.")
             auth_data.user_auth.jwt_loop = false;
 
             if (this->resultCb && getRefResult())

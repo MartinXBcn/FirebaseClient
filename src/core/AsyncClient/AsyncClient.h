@@ -27,6 +27,7 @@
 #include "ESP32Logger.h"
 
 #define dbglvlaclient Debug
+//#define dbglvlaclient Info
 
 
 using namespace firebase_ns;
@@ -310,6 +311,7 @@ private:
     // Handles TCP data sending process.
     function_return_type send(async_data *sData)
     {
+        DBGLOG(Info, "[AsyncClientClass] >> send() state: %i", sData->state)
         function_return_type ret = ret_continue;
 
         if (sData->state == astate_undefined || sData->state == astate_send_header) // Initial connection or payload sending state.
@@ -1064,16 +1066,21 @@ private:
 
     void process(bool async)
     {
-        if (processLocked())
+        DBGLOG(dbglvlaclient, "[AsyncClientClass] >> async: %s", DBGB2S(async))
+        if (processLocked()) {
+            DBGLOG(dbglvlaclient, "[AsyncClientClass] << processLocked() == true")
             return;
+        }
 
         if (slotCount())
         {
             size_t slot = 0;
             async_data *sData = sman.getData(slot);
 
-            if (!sData)
+            if (!sData) {
+                DBGLOG(dbglvlaclient, "[AsyncClientClass] << sData == nullptr")
                 return exitProcess(false);
+            }
 
             sman.debug_log.pop_front();
             sman.event_log.pop_front();
@@ -1086,8 +1093,10 @@ private:
                 *ul_dl_task_running = true;
             }
 
-            if (sData->async && !async)
+            if (sData->async && !async) {
+                DBGLOG(dbglvlaclient, "[AsyncClientClass] << sData->async && !async")
                 return exitProcess(false);
+            }
 
             // Restart connection when authenticate, client or network changed
             DBGLOG(dbglvlaclient, 
@@ -1118,6 +1127,7 @@ private:
                 sData->response.clear();
                 sData->request.feedTimer(!sData->async && sync_send_timeout_sec > 0 ? sync_send_timeout_sec : -1);
                 sending = true;
+                DBGLOG(Info, "[AsyncClientClass] send(sData->request.val[0].c_str(): %s) ...", sData->request.val[0].c_str())
                 sData->return_type = send(sData);
 
                 while (sData->state == astate_send_header || sData->state == astate_send_payload)
@@ -1140,8 +1150,10 @@ private:
             if (sending)
             {
                 handleSendTimeout(sData);
-                if (sData->async && sData->return_type == ret_continue)
+                if (sData->async && sData->return_type == ret_continue) {
+                    DBGLOG(dbglvlaclient, "[AsyncClientClass] << sData->async && sData->return_type == ret_continue");
                     return exitProcess(false);
+                }
             }
 
             sys_idle();
@@ -1165,16 +1177,19 @@ private:
                     }
                     else
                         handleReadTimeout(sData);
+                    DBGLOG(dbglvlaclient, "[AsyncClientClass] << sData->async && !sData->response.tcpAvailable()");
                     return exitProcess(false);
                 }
                 else if (!sData->async) // wait for non async
                 {
+                    DBGLOG(dbglvlaclient, "[AsyncClientClass] wait for non async ...")
                     while (!sData->response.tcpAvailable())
                     {
                         sys_idle();
                         if (handleReadTimeout(sData))
                             break;
                     }
+                    DBGLOG(dbglvlaclient, "[AsyncClientClass] ... done")
                 }
             }
 
@@ -1223,6 +1238,7 @@ private:
                 removeSlot(slot);
         }
         exitProcess(false);
+        DBGLOG(dbglvlaclient, "[AsyncClientClass] <<")
     }
 
     FirebaseError *_lastError() { return &sman.lastErr; }
