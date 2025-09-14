@@ -17,7 +17,7 @@ using namespace firebase_ns;
 
 // <MS> Logging
 #undef MS_LOGGER_LEVEL
-#ifdef MS_FIREBASECLIENT_LOGGING
+#if defined(MS_FIREBASECLIENT_LOGGING) && defined(MS_LOGGER_ON)
 #define MS_LOGGER_LEVEL MS_FIREBASECLIENT_LOGGING
 #endif
 #include "ESP32Logger.h"
