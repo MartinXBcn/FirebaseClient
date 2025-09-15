@@ -80,6 +80,33 @@ private:
         }
     }
 
+
+// <MS>
+#if defined(MS_FIREBASECLIENT_LOGGING) && defined(MS_LOGGER_ON)
+    const char* async_state_as_char(const async_state state) const {
+        switch (state) {
+            case astate_undefined: return "async_state::undefined";
+            case astate_send_header: return "async_state::send_header";
+            case astate_send_payload: return "async_state::send_payload";
+            case astate_read_response: return "async_state::read_response";
+            case astate_complete: return "async_state::complete";
+            default: return "unknown";
+        }
+    }
+
+    const char* function_return_type_as_char(const function_return_type ret) const {
+        switch (ret) {
+            case ret_undefined: return "function_return_type::undefined";
+            case ret_failure: return "function_return_type::failure";
+            case ret_continue: return "function_return_type::continue";
+            case ret_complete: return "function_return_type::complete";
+            case ret_retry: return "function_return_type::retry";
+            default: return "unknown";
+        }
+    }
+#endif
+
+    
     function_return_type sendHeader(async_data *sData, const char *data) { return sendImpl(sData, reinterpret_cast<const uint8_t *>(data), data ? strlen(data) : 0, data ? strlen(data) : 0, astate_send_header); }
 
     function_return_type sendHeader(async_data *sData, const uint8_t *data, size_t len) { return sendImpl(sData, data, len, len, astate_send_header); }
@@ -311,7 +338,7 @@ private:
     // Handles TCP data sending process.
     function_return_type send(async_data *sData)
     {
-        DBGLOG(Info, "[AsyncClientClass] >> send() state: %i", sData->state)
+        DBGLOG(Info, "[AsyncClientClass] >> sData->state: %i - %s", sData->state, async_state_as_char(sData->state))
         function_return_type ret = ret_continue;
 
         if (sData->state == astate_undefined || sData->state == astate_send_header) // Initial connection or payload sending state.
@@ -323,7 +350,8 @@ private:
             {
                 // Missing auth token error.
                 sman.setAsyncError(sData, sData->state, FIREBASE_ERROR_UNAUTHENTICATE, !sData->sse, false);
-                return ret_failure;
+                ret = ret_failure;
+                goto end;
             }
 
             // Stop the server connection when entering the initial/auth token request states or host, port, and SSE mode changes or session timed out.
@@ -334,18 +362,22 @@ private:
                 if (sData->request.getHost(true, &sData->response.val[resns::location]).length() == 0)
                 {
                     sData->aResult.lastError.setClientError(FIREBASE_ERROR_INVALID_HOST);
-                    return sman.connErrorHandler(sData, sData->state);
+                    ret = sman.connErrorHandler(sData, sData->state);
+                    goto end;
                 }
 
                 // Connect to the server if not connected.
                 ret = sman.connect(sData, sData->request.getHost(true, &sData->response.val[resns::location]).c_str(), sData->request.port);
 
                 // Allowing non-blocking async tcp connection
-                if (ret == ret_continue)
-                    return ret;
+                if (ret == ret_continue) 
+                    goto end;
 
-                if (ret != ret_complete)
-                    return sman.connErrorHandler(sData, sData->state);
+                if (ret != ret_complete) {
+
+                    ret = sman.connErrorHandler(sData, sData->state);
+                    goto end;
+                }
 
                 sman.conn.sse = sData->sse;
                 sman.conn.async = sData->async;
@@ -362,10 +394,11 @@ private:
                 header.replace(FIREBASE_AUTH_PLACEHOLDER, sData->request.app_token->val[app_tk_ns::token]);
                 ret = sendHeader(sData, header.c_str());
                 sut.clear(header);
-                return ret;
+                goto end;
             }
             // Auth task header sending.
-            return sendHeader(sData, sData->request.val[reqns::header].c_str());
+            ret = sendHeader(sData, sData->request.val[reqns::header].c_str());
+            goto end;
         }
         else if (sData->state == astate_send_payload)
         {
@@ -387,6 +420,9 @@ private:
                 }
             }
         }
+
+    end:
+        DBGLOG(Info, "[AsyncClientClass] << return: %d - %s", ret, function_return_type_as_char(ret))
         return ret;
     }
 
