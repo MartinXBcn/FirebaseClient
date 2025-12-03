@@ -125,7 +125,7 @@ private:
         if (displayInfoTimer.remaining() == 0 || !displayInfoTimer.isRunning())
         {
             if (app_loop_count_addr && *reinterpret_cast<uint16_t *>(app_loop_count_addr) <= 1)
-                Serial.println("🔥 FirebaseApp::loop() or FirebaseApp::ready() has never been called.");
+//                Serial.println("🔥 FirebaseApp::loop() or FirebaseApp::ready() has never been called.");
 
             displayInfoTimer.feed(60);
         }

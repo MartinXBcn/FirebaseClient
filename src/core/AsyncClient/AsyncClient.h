@@ -1376,7 +1376,7 @@ public:
     void setEtag(const String &etag)
     {
         (void)etag;
-        Serial.println("🔥 AsyncClientClass::setEtag is deprecated.");
+//        Serial.println("🔥 AsyncClientClass::setEtag is deprecated.");
     }
 
     /**

@@ -281,7 +281,7 @@ namespace firebase_ns
 #if defined(FIREBASE_PRINTF_PORT)
             FIREBASE_PRINTF_PORT.print(s);
 #else
-            Serial.print(s);
+//            Serial.print(s);
 #endif
         }
     };
@@ -392,7 +392,7 @@ inline void signup(AsyncClientClass &aClient, FirebaseApp &app, user_auth_data &
  */
 inline void signup(AsyncClientClass &aClient, FirebaseApp &app, user_auth_data &auth, AsyncResult &aResult)
 {
-    Serial.println("Warning. The AsyncResult is not needed any more when calling the signup.");
+//    Serial.println("Warning. The AsyncResult is not needed any more when calling the signup.");
     app.setAsyncResult(aResult);
     Firebase.signup(aClient, app, auth);
 }
