@@ -25,6 +25,7 @@
 #endif
 #include "ESP32Logger.h"
 
+//#define fbdbglvl Info
 #define fbdbglvl Debug
 
 namespace firebase_ns
@@ -42,6 +43,8 @@ namespace firebase_ns
         friend class CloudStorage;
 
     private:
+        const char* fbappTAG = "[FirebaseApp] ";
+
         String extras, subdomain, host, uid;
         bool deinit = false, processing = false, ul_dl_task_running = false;
         uint16_t slot = 0;
@@ -68,7 +71,7 @@ namespace firebase_ns
 
         void appLoop()
         {
-            DBGLOG(fbdbglvl, "[FirebaseApp] >>")
+            DBGLOG(fbdbglvl, "%s"">>", fbappTAG)
 #if defined(ENABLE_JWT)
             if (auth_data.user_auth.auth_type == auth_sa_access_token || auth_data.user_auth.auth_type == auth_sa_custom_token)
             {
@@ -81,8 +84,8 @@ namespace firebase_ns
             auth_data.user_auth.jwt_loop = true;
             DBGCOD(bool ret = )
             processAuth();
-            DBGLOG(fbdbglvl, "[FirebaseApp] processAuth() returned: %s", DBGB2S(ret))
-            DBGCHX(Debug, ret, "processAuth() failed!", "processAuth() ok.")
+            DBGLOG(fbdbglvl, "%s""processAuth() returned: %s", fbappTAG, DBGB2S(ret))
+            DBGCHX(fbdbglvl, ret, "%s""processAuth() failed!", "%s""processAuth() ok.", fbappTAG)
             auth_data.user_auth.jwt_loop = false;
 
             if (this->resultCb && getRefResult())
@@ -96,7 +99,7 @@ namespace firebase_ns
                 cvec_address_info_t cvec_address_info = cvec_address_list[i];
                 staticLoop(cvec_address_info.app_token, cvec_address_info.cvec_addr);
             }
-            DBGLOG(fbdbglvl, "[FirebaseApp] <<")
+            DBGLOG(fbdbglvl, "%s""<<", fbappTAG)
         }
 
         void await(unsigned long timeoutMs = 0)
@@ -355,15 +358,24 @@ namespace firebase_ns
 
         bool processAuth()
         {
+            DBGLOG(fbdbglvl, "%s"">>", fbappTAG)
             app_loop_count++;
             sys_idle();
+            bool ret = false;
 
             if (!getClient())
-                return false;
+            {
+                DBGLOG(Error, "%s""getClient() failed!", fbappTAG)
+                goto end;
+            }
 
             // Prevent authentication task from running when upload/download task is running.
             if (ul_dl_task_running)
-                return true;
+            {
+                DBGLOG(fbdbglvl, "%s""ul_dl_task_running = true.", fbappTAG)
+                ret = true;
+                goto end;
+            }
 
             // Deinitialize
             if (deinit && auth_data.user_auth.initialized)
@@ -375,7 +387,8 @@ namespace firebase_ns
                 stop(aClient);
                 deinitializeApp();
                 auth_timer.stop();
-                return false;
+                DBGLOG(Error, "%s""deinit!", fbappTAG)
+                goto end;
             }
 
             getAppDebug(aClient)->pop_front();
@@ -384,7 +397,11 @@ namespace firebase_ns
             process(aClient);
 
             if (!isExpired() || (isExpired() && auth_data.app_token.val[app_tk_ns::token].length() && !auth_data.auto_renew && !auth_data.force_refresh))
-                return true;
+            {
+                DBGLOG(Debug, "%s""Nothing to do.", fbappTAG)
+                ret = true;
+                goto end;
+            }
 
             if (!processing)
             {
@@ -425,11 +442,15 @@ namespace firebase_ns
                         jwtProcessor()->sendErrCB(auth_data.cb, nullptr);
                 }
 #endif
-                return false;
+                DBGLOG(Error, "%s""timeout!", fbappTAG)
+                goto end;
             }
 
             if (auth_data.user_auth.status._event == auth_event_uninitialized && err_timer.remaining() > 0)
-                return false;
+            {
+                DBGLOG(Error, "%s""uninitialized!", fbappTAG)
+                goto end;
+            }
 
             if (auth_data.user_auth.auth_type == auth_access_token ||
                 auth_data.user_auth.auth_type == auth_sa_access_token ||
@@ -617,7 +638,9 @@ namespace firebase_ns
                     sut.clear(extras);
                     sut.clear(host);
                     setEvent(auth_event_auth_request_sent);
-                    return true;
+                    DBGLOG(fbdbglvl, "%s""okay.", fbappTAG)
+                    ret = true;
+                    goto end;
                 }
             }
 
@@ -631,7 +654,8 @@ namespace firebase_ns
                     // In case of googleapis returns http status code >= 400 or request is timed out.
                     // Note that, only status line was read in case http status code >= 400
                     setEvent(auth_event_error, req_timer.remaining() == 0 ? "connection timed out" : sData->response.val[resns::status]);
-                    return false;
+                    DBGLOG(Error, "%s""connection timeout!", fbappTAG)
+                    goto end;
                 }
 
                 if (sData && sData->response.auth_data_available)
@@ -640,7 +664,10 @@ namespace firebase_ns
                     {
                         setEvent(auth_event_auth_response_received);
                         if (getRefResult())
-                            return false;
+                        {
+                            DBGLOG(Error, "%s""getRefResult() != NULL!", fbappTAG)
+                            goto end;
+                        }
                     }
 
                     if (auth_data.user_auth.task_type == firebase_core_auth_task_type_delete_user || auth_data.user_auth.task_type == firebase_core_auth_task_type_send_verify_email || auth_data.user_auth.task_type == firebase_core_auth_task_type_reset_password)
@@ -651,7 +678,9 @@ namespace firebase_ns
                         auth_data.app_token.expire = FIREBASE_DEFAULT_TOKEN_TTL;
                         auth_timer.feed(FIREBASE_DEFAULT_TOKEN_TTL);
                         setEvent(auth_event_ready);
-                        return true;
+                        DBGLOG(fbdbglvl, "%s""okay 2.", fbappTAG)
+                        ret = true;
+                        goto end;
                     }
 
                     if (auth_data.user_auth.task_type == firebase_core_auth_task_type_signup)
@@ -685,9 +714,16 @@ namespace firebase_ns
 
             // Defer the ready status to allow the remaining information to be read or printed inside the waiting loop.
             if (auth_data.user_auth.status._event == auth_event_ready && auth_data.app_token.authenticated && app_ready_timer.remaining() > 0)
-                return false;
+            {
+                DBGLOG(fbdbglvl, "%s""remaining data!", fbappTAG)
+                // <MS> Although it is no error return false, because processAuth() is also called by ready() and because of the remaining data the status is 'not-ready'.
+                goto end;
+            }
 
-            return true;
+            ret = true;
+        end:
+            DBGLOG(fbdbglvl, "%s""<< return: %s", fbappTAG, DBGB2S(ret))
+            return ret;
         }
 
         void deinitializeApp()
