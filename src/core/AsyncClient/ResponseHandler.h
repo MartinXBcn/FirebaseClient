@@ -462,12 +462,43 @@ public:
                         reserveString();
                         val[resns::payload] += (const char *)respCtx.buf;
                     }
-
+/*
                     if (!respCtx.isChunked || (respCtx.isChunked && len == 0))
                     {
                         respCtx.stage = response_stage_finished;
                         respCtx.freeBuf();
                     }
+*/                        
+// <MS>
+                    // IMPORTANT: Do not finish after the first buffer for non-chunked responses.
+                    if (!respCtx.isChunked)
+                    {
+                        if (respCtx.bytesRemState == 0)
+                        {
+                            respCtx.stage = response_stage_finished;
+                            respCtx.freeBuf();
+                        }
+                        else
+                        {
+                            // If Content-Length is unknown (bytesRemState < 0),
+                            // only finish when the stream really ends (no data available and disconnected).
+                            if (respCtx.bytesRemState < 0 && len == 0 && !client->available() && !client->connected())
+                            {
+                                respCtx.stage = response_stage_finished;
+                                respCtx.freeBuf();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // In chunked mode, len==0 indicates end-of-stream in this implementation.
+                        if (len == 0)
+                        {
+                            respCtx.stage = response_stage_finished;
+                            respCtx.freeBuf();
+                        }
+                    }
+// <MS>
                 }
             }
         }
