@@ -149,6 +149,7 @@
 #elif defined(ESP8266) || defined(CORE_ARDUINO_PICO)
 #include <Updater.h>
 #endif
+
 #define OTA_UPDATE_ENABLED
 #endif
 
@@ -170,7 +171,7 @@
 #endif
 #endif
 
-#define FIREBASE_DEFAULT_TS 1618971013
+#define FIREBASE_DEFAULT_TS 1759214462
 
 #define FIREBASE_RECONNECTION_TIMEOUT_MSEC 5000
 
