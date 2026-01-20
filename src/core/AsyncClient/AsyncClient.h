@@ -1125,6 +1125,9 @@ private:
                 {
                     sData->return_type = send(sData);
                     handleSendTimeout(sData);
+                    // <MS>
+                    if (!sData->async)
+                        sys_idle();
                     if (sData->async || sData->return_type == ret_failure)
                         break;
                 }
@@ -1190,6 +1193,9 @@ private:
                 sData->error.code = 0;
                 while (sData->return_type == ret_continue && (sData->response.httpCode == 0 || sData->response.respCtx.stage != res_handler::response_stage_finished))
                 {
+                    // <MS>
+                    if (!sData->async)
+                        sys_idle();
                     sData->response.feedTimer(!sData->async && sync_read_timeout_sec > 0 ? sync_read_timeout_sec : -1);
                     sData->return_type = receive(sData);
 

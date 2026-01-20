@@ -13,6 +13,8 @@
 
 #ifndef FIREBASE_CORE_IDLE_DELAY
 #define FIREBASE_CORE_IDLE_DELAY 0
+// <MS>
+#error "FIREBASE_CORE_IDLE_DELAY must be defined!"
 #endif
 
 
