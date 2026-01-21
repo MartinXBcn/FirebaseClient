@@ -1196,7 +1196,12 @@ private:
                     // <MS>
                     if (!sData->async)
                         sys_idle();
-                    sData->response.feedTimer(!sData->async && sync_read_timeout_sec > 0 ? sync_read_timeout_sec : -1);
+
+                    // <MS>
+                    // Do NOT refresh the read timeout unless new data is actually available.
+                    // Otherwise a stalled connection (no further bytes arriving) can keep the loop alive forever.
+                    if (sData->response.tcpAvailable() > 0)
+                        sData->response.feedTimer(!sData->async && sync_read_timeout_sec > 0 ? sync_read_timeout_sec : -1);
                     sData->return_type = receive(sData);
 
                     handleReadTimeout(sData);
