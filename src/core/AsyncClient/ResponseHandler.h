@@ -462,8 +462,11 @@ public:
                         reserveString();
                         val[resns::payload] += (const char *)respCtx.buf;
                     }
-/*
+/* <MS>
+                    // < 2.2.9
                     if (!respCtx.isChunked || (respCtx.isChunked && len == 0))
+                    // >= 2.2.9
+                    if ((!respCtx.isChunked && respCtx.bytesRemState <= 0) || (respCtx.isChunked && len == 0))
                     {
                         respCtx.stage = response_stage_finished;
                         respCtx.freeBuf();
