@@ -37,12 +37,13 @@ public:
     {
 
     public:
-        bool keep_alive = false, uploadRange = false;
+        bool keep_alive = false, uploadRange = false, connection_close = false;
         bool sse = false, http_response = false, chunks = false, payload_available = false, gzip = false;
 
         void reset()
         {
             keep_alive = false;
+            connection_close = false;
             sse = false;
             chunks = false;
             payload_available = false;
@@ -80,6 +81,8 @@ public:
         bool isAuth = false;
         long tempSize = 0;
         bool stateChunkSizeRead = false; // Tracks if we have actually read digits for the current chunk size
+        bool chunkedEnd = false;         // The chunked terminal (zero-length) chunk was received i.e. the response ended per protocol.
+        bool abnormalEnd = false;        // The payload stage ended by read timeout instead of the protocol (Content-Length reached or terminal chunk received).
 
         void begin()
         {
@@ -96,6 +99,8 @@ public:
             stage = response_stage_init;
             tempSize = 0;
             stateChunkSizeRead = false;
+            chunkedEnd = false;
+            abnormalEnd = false;
         }
 
         void newHdr()
@@ -298,7 +303,15 @@ public:
 
                             // If we saw digits and the value is 0, it's the actual End of Stream.
                             if (respCtx.tempSize == 0)
+                            {
+                                // The response ended per protocol (RFC 9112 terminal chunk).
+                                // Consume the trailing CRLF if it already arrived so no stale
+                                // bytes remain to desync the next keep-alive request.
+                                respCtx.chunkedEnd = true;
+                                while (source->available() && (source->peek() == '\r' || source->peek() == '\n'))
+                                    source->read();
                                 return (int)pos;
+                            }
 
                             // Otherwise, lock in the new chunk size
                             respCtx.bytesRemState = respCtx.tempSize;
@@ -408,8 +421,15 @@ public:
                     respCtx.bytesRemState = payloadLen;
                 }
 
-                if (parseHeaders((const char *)respCtx.buf, "Connection", respCtx.hdr, respCtx.hdrSize) && strstr(respCtx.hdr, "keep-alive"))
-                    flags.keep_alive = true;
+                if (parseHeaders((const char *)respCtx.buf, "Connection", respCtx.hdr, respCtx.hdrSize))
+                {
+                    if (strstr(respCtx.hdr, "keep-alive"))
+                        flags.keep_alive = true;
+                    // The server announced it will close this connection after this
+                    // response (e.g. reached its max connection age/requests limit).
+                    if (strstr(respCtx.hdr, "close"))
+                        flags.connection_close = true;
+                }
 
                 if (parseHeaders((const char *)respCtx.buf, "Transfer-Encoding", respCtx.hdr, respCtx.hdrSize) && strstr(respCtx.hdr, "chunked"))
                 {
@@ -450,6 +470,13 @@ public:
                 if (len < 0 || (!respCtx.isChunked && respCtx.bytesRemState == 0 && len == 0))
                 {
                     // Timeout or Socket Closed
+                    if (len == -2 && !respCtx.chunkedEnd)
+                    {
+                        // Ended by read timeout, not by the protocol. The socket may still
+                        // hold unread bytes of this response; the caller should not reuse
+                        // this connection.
+                        respCtx.abnormalEnd = true;
+                    }
                     respCtx.stage = response_stage_finished;
                     respCtx.freeBuf();
                 }
@@ -471,8 +498,15 @@ public:
                         respCtx.stage = response_stage_finished;
                         respCtx.freeBuf();
                     }
+                    // 2.213
+                    if ((!respCtx.isChunked && respCtx.bytesRemState <= 0) || (respCtx.isChunked && (len == 0 || respCtx.chunkedEnd)))
+                    {
+                        respCtx.stage = response_stage_finished;
+                        respCtx.freeBuf();
+                    }
 */                        
 // <MS>
+/* BISHER von mir
                     // IMPORTANT: Do not finish after the first buffer for non-chunked responses.
                     if (!respCtx.isChunked)
                     {
@@ -500,6 +534,25 @@ public:
                             respCtx.stage = response_stage_finished;
                             respCtx.freeBuf();
                         }
+                    }
+*/
+                    // Neu von CODEX in 2.2.13
+                    if (!respCtx.isChunked)
+                    {
+                        if (respCtx.bytesRemState == 0 ||
+                            (respCtx.bytesRemState < 0 &&
+                            len == 0 &&
+                            !client->available() &&
+                            !client->connected()))
+                        {
+                            respCtx.stage = response_stage_finished;
+                            respCtx.freeBuf();
+                        }
+                    }
+                    else if (len == 0 || respCtx.chunkedEnd)
+                    {
+                        respCtx.stage = response_stage_finished;
+                        respCtx.freeBuf();
                     }
 // <MS>
                 }

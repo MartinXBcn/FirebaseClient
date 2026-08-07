@@ -52,6 +52,10 @@ namespace firebase_ns
 
 #if defined(ENABLE_JWT)
         JWTClass *jwtClass = nullptr;
+        // Per-app default JWT processor. Each FirebaseApp signs with its own
+        // instance so multiple apps no longer share (and corrupt) the single
+        // global JWT signing state. setJWTProcessor() can still override this.
+        JWTClass jwtInstance;
 #endif
         async_data *sData = nullptr;
         AsyncClientClass *aClient = nullptr;
@@ -75,10 +79,7 @@ namespace firebase_ns
 #if defined(ENABLE_JWT)
             if (auth_data.user_auth.auth_type == auth_sa_access_token || auth_data.user_auth.auth_type == auth_sa_custom_token)
             {
-                if (jwtClass)
-                    jwtClass->loop(getAuth());
-                else
-                    JWT.loop(getAuth());
+                jwtProcessor()->loop(getAuth());
             }
 #endif
             auth_data.user_auth.jwt_loop = true;
@@ -735,7 +736,7 @@ namespace firebase_ns
         }
 
 #if defined(ENABLE_JWT)
-        JWTClass *jwtProcessor() { return jwtClass ? jwtClass : &JWT; }
+        JWTClass *jwtProcessor() { return jwtClass ? jwtClass : &jwtInstance; }
 #endif
 
     public:
@@ -775,7 +776,11 @@ namespace firebase_ns
 #if defined(ENABLE_JWT)
         void loop(JWTClass *jwt = nullptr)
         {
-            jwtClass = jwt;
+            // Only override the JWT processor when a valid one is passed, so a
+            // previously assigned processor via setJWTProcessor() is not cleared
+            // on every loop() call.
+            if (jwt)
+                jwtClass = jwt;
             await(await_ms);
         }
 #else
