@@ -1351,6 +1351,13 @@ public:
     FirebaseError lastError() const { return sman.lastErr; }
 
     /**
+     * Get the result used by synchronous operations, including early request errors.
+     * The result is shared between sync calls. Serialize access to the client and
+     * clear this result before a request when a fresh response must be verified.
+     */
+    AsyncResult &syncResult() { return *sman.getResult(); }
+
+    /**
      * Get the response ETag.
      *
      * @return String The response ETag header.
